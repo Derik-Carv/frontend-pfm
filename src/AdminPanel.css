@@ -7,9 +7,14 @@
 .admin-toolbar select { min-height: 38px; min-width: 190px; padding: 0 10px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 12px; }
 .admin-toolbar .management-secondary { margin-left: auto; }
 .admin-editor { margin-top: 17px; }
-.admin-json-label { display: block; margin-bottom: 7px; color: var(--label); font-size: 11px; font-weight: 700; }
-.admin-json-editor { display: block; width: 100%; min-height: 240px; padding: 12px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
-.admin-json-editor:focus { border-color: #2d9373; outline: 2px solid rgb(45 147 115 / 14%); }
+.admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.admin-field { display: grid; gap: 6px; color: var(--label); font-size: 11px; font-weight: 700; }
+.admin-field input, .admin-field textarea { width: 100%; padding: 10px 11px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 12px; }
+.admin-field textarea { min-height: 76px; resize: vertical; }
+.admin-field input:focus, .admin-field textarea:focus { border-color: #2d9373; outline: 2px solid rgb(45 147 115 / 14%); }
+.admin-field small { color: var(--muted); font-size: 10px; font-weight: 400; }
+.admin-checkbox { display: flex; align-items: center; gap: 8px; min-height: 38px; color: var(--label); font-size: 11px; font-weight: 700; }
+.admin-checkbox input { accent-color: #2d9373; }
 .admin-table-scroll { margin-top: 17px; }
 .admin-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 15px; }
 .admin-pagination .dashboard-page-controls { margin: 0; }
@@ -20,4 +25,5 @@
   .admin-toolbar { align-items: stretch; flex-direction: column; }
   .admin-toolbar select { width: 100%; }
   .admin-toolbar .management-secondary { margin-left: 0; }
+  .admin-form-grid { grid-template-columns: 1fr; }
 }
