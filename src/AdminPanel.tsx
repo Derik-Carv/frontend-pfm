@@ -154,11 +154,15 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
   const [editor, setEditor] = useState<{ id?: string; values: Record<string, FormValue> } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true)
+  const [rolesError, setRolesError] = useState('')
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token])
 
   useEffect(() => {
     let active = true
     async function loadRoles() {
+      setIsLoadingRoles(true)
+      setRolesError('')
       try {
         const result = await apiRequest<AdminResponse>('/admin/data/roles?page=1&limit=100&status=active', { headers })
         if (!active) return
@@ -168,9 +172,14 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
           return id && name ? [{ id, name }] : []
         }))
       } catch (loadError) {
+        if (!active) return
         if (loadError instanceof Error && 'status' in loadError && loadError.status === 401) {
           onLogout()
+          return
         }
+        setRolesError('Não foi possível carregar os perfis. Atualize a tela e tente novamente.')
+      } finally {
+        if (active) setIsLoadingRoles(false)
       }
     }
     void loadRoles()
@@ -320,11 +329,12 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
                 const currentRoleId = String(value ?? '')
                 const hasCurrentRole = roleOptions.some((role) => role.id === currentRoleId)
                 return <label className="admin-field" key={field.key}>{field.label} *
-                  <select className="admin-select" onChange={(event) => updateField(field.key, event.target.value)} required value={currentRoleId}>
-                    <option value="">Selecione um perfil</option>
+                  <select className="admin-select" disabled={isLoadingRoles || Boolean(rolesError)} onChange={(event) => updateField(field.key, event.target.value)} required value={currentRoleId}>
+                    <option value="">{isLoadingRoles ? 'Carregando perfis...' : rolesError ? 'Perfis indisponíveis' : 'Selecione um perfil'}</option>
                     {!hasCurrentRole && currentRoleId && <option value={currentRoleId}>Perfil atual</option>}
                     {roleOptions.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
                   </select>
+                  {rolesError && <small className="admin-field-error">{rolesError}</small>}
                 </label>
               }
               const common = { id: `admin-${field.key}`, name: field.key, onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => updateField(field.key, event.target.value), placeholder: field.placeholder, required: field.required && !(editor.id && field.key === 'password'), value: String(value ?? '') }
