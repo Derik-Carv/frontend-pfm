@@ -10,7 +10,7 @@ A publicação deste repositório e as adaptações de integração, containeriz
 ## Requisitos
 
 - Bun
-- Docker e Docker Compose para execução em container
+- Docker e Docker Compose para execução opcional em container
 
 ## Desenvolvimento local
 
@@ -29,6 +29,37 @@ Inicie o frontend:
 
 ```bash
 bun run dev
+```
+
+## Deploy na Vercel
+
+O projeto está configurado para Vercel em [vercel.json](./vercel.json).
+
+1. Importe `Derik-Carv/frontend-pfm` na Vercel.
+2. Use o preset **Vite**.
+3. Configure `VITE_API_URL` como a URL **HTTPS** pública da API na VM.
+4. Faça o deploy.
+
+Exemplo:
+
+```env
+VITE_API_URL=https://api.seu-dominio.com
+```
+
+Não use `http://137.131.254.117:3336` em produção: o frontend da Vercel será
+servido por HTTPS e o navegador bloqueará essa chamada por mixed content.
+
+Após o primeiro deploy, configure no backend `CORS_ORIGIN` com o domínio
+gerado pela Vercel, por exemplo:
+
+```env
+CORS_ORIGIN=https://frontend-pfm.vercel.app
+```
+
+Se houver domínio próprio, prefira configurar o domínio final:
+
+```env
+CORS_ORIGIN=https://app.seu-dominio.com
 ```
 
 ## Produção com Docker
