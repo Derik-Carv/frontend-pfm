@@ -1,0 +1,70 @@
+:root {
+  font-family: var(--font-ui);
+  color: #0f2f24;
+  background: #f4fbf7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --forest: #0f2f24;
+  --font-ui: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-heading: 'Manrope', 'DM Sans', sans-serif;
+  --panel-text: #f4fbf7;
+  --paper: #f4fbf7;
+  --lime: #2d9373;
+  --clay: #d97706;
+  --ink: #0f2f24;
+  --muted: #617c70;
+  --heading: var(--forest);
+  --label: var(--forest);
+  --field-bg: #ffffff;
+  --field-border: #d7e6de;
+  --message-bg: #e2f2eb;
+  --message-text: var(--forest);
+  --footnote: #71877c;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color: #e5f3ec;
+  background: #0b2119;
+
+  --paper: #0b2119;
+  --heading: #e5f3ec;
+  --label: #d0e6d9;
+  --ink: #e5f3ec;
+  --muted: #9db8aa;
+  --field-bg: #123528;
+  --field-border: #285b47;
+  --message-bg: #173e30;
+  --message-text: #d9efe3;
+  --footnote: #9db8aa;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--paper);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #142e25;
+  background: #d5e5a5;
+}

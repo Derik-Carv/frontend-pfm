@@ -1,0 +1,52 @@
+.management-view { animation: dashboard-enter 260ms ease-out both; }
+.management-heading { display: flex; align-items: end; justify-content: space-between; gap: 22px; padding-bottom: 20px; border-bottom: 1px solid var(--field-border); }
+.management-heading h2 { margin: 0; color: var(--heading); font: 700 29px/1.15 var(--font-heading); }
+.management-heading > div:first-child > p:last-child { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+.management-actions { display: flex; align-items: center; gap: 10px; }
+.management-primary,
+.management-secondary { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid #2d9373; border-radius: 3px; color: #fff; background: #1b6951; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.management-primary:hover:not(:disabled) { background: #0f2f24; }
+.management-primary:disabled { cursor: wait; opacity: .62; }
+.management-secondary { border-color: var(--field-border); color: var(--ink); background: var(--field-bg); }
+.management-message { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 15px 0; padding: 11px 13px; border-left: 3px solid; font-size: 12px; }
+.management-message.is-error { border-color: #b84c3f; color: #8d3129; background: #faeae5; }
+.management-message.is-success { border-color: #2d9373; color: #1b6951; background: #e4f3ec; }
+.management-message button { border: 0; color: inherit; background: transparent; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.management-loading,
+.management-empty { padding: 45px 15px; color: var(--muted); font-size: 13px; text-align: center; }
+.management-table-scroll { margin-top: 17px; }
+.management-table-scroll .dashboard-table { min-width: 760px; }
+.management-table-scroll .dashboard-table td { padding-block: 8px; }
+.management-detail-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.management-edit { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border: 1px solid var(--field-border); border-radius: 3px; color: #1b6951; background: var(--field-bg); font-size: 17px; cursor: pointer; }
+.management-edit:hover { border-color: #2d9373; color: #fff; background: #2d9373; }
+.management-status { display: inline-flex; min-height: 23px; align-items: center; padding: 0 8px; border-radius: 2px; font-size: 10px; font-weight: 700; }
+.management-status.is-active { color: #1b6951; background: #e4f3ec; }
+.management-status.is-inactive { color: #8d3129; background: #faeae5; }
+.management-form { margin-top: 17px; padding: 20px; border: 1px solid var(--field-border); border-top: 3px solid #2d9373; border-radius: 3px; background: var(--field-bg); }
+.management-form-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.management-form-heading .dashboard-card-index { margin-bottom: 5px; }
+.management-form-heading h3 { margin: 0; color: var(--heading); font: 700 19px/1.2 var(--font-heading); }
+.management-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.management-fields label { display: grid; min-width: 0; gap: 6px; color: var(--label); font-size: 11px; font-weight: 700; }
+.management-fields input,
+.management-fields select,
+.management-fields textarea { width: 100%; min-width: 0; min-height: 39px; padding: 8px 10px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 12px; }
+.management-fields textarea { resize: vertical; }
+.management-fields input:focus,
+.management-fields select:focus,
+.management-fields textarea:focus { border-color: #2d9373; outline: 2px solid rgb(45 147 115 / 14%); }
+.management-full-field { grid-column: 1 / -1; }
+.management-hint { margin: 13px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.management-form-actions { display: flex; justify-content: end; gap: 9px; margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--field-border); }
+.management-view button:focus-visible { outline: 2px solid var(--clay); outline-offset: 3px; }
+
+@media (max-width: 720px) {
+  .management-heading { align-items: stretch; flex-direction: column; }
+  .management-actions { align-items: stretch; flex-direction: column; }
+  .management-actions .dashboard-search { width: 100%; }
+  .management-actions .management-primary { width: 100%; }
+  .management-fields { grid-template-columns: 1fr; }
+  .management-full-field { grid-column: auto; }
+  .management-form { padding: 15px; }
+}
