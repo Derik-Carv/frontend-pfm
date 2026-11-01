@@ -29,6 +29,11 @@ type AdminResponse = {
   pagination: Pagination
 }
 
+type RoleOption = {
+  id: string
+  name: string
+}
+
 type AdminPanelProps = {
   token: string
   onLogout: () => void
@@ -56,7 +61,7 @@ const fieldsByTable: Record<AdminTable, FieldDefinition[]> = {
     { key: 'surname', label: 'Sobrenome', required: true },
     { key: 'username', label: 'Usuário', required: true },
     { key: 'password', label: 'Senha', type: 'password', required: true, help: 'Na edição, deixe vazio para manter a senha atual.' },
-    { key: 'roleId', label: 'ID do perfil', required: true, placeholder: 'Cole o ID UUID do perfil' },
+    { key: 'roleId', label: 'Perfil', required: true },
     { key: 'cpf', label: 'CPF', required: true },
     { key: 'active', label: 'Ativo', type: 'boolean' },
     { key: 'passwordChangeRequired', label: 'Solicitar troca de senha', type: 'boolean' },
@@ -148,7 +153,29 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
   const [notice, setNotice] = useState('')
   const [editor, setEditor] = useState<{ id?: string; values: Record<string, FormValue> } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token])
+
+  useEffect(() => {
+    let active = true
+    async function loadRoles() {
+      try {
+        const result = await apiRequest<AdminResponse>('/admin/data/roles?page=1&limit=100&status=active', { headers })
+        if (!active) return
+        setRoleOptions(result.records.flatMap((record) => {
+          const id = typeof record.id === 'string' ? record.id : ''
+          const name = typeof record.name === 'string' ? record.name : ''
+          return id && name ? [{ id, name }] : []
+        }))
+      } catch (loadError) {
+        if (loadError instanceof Error && 'status' in loadError && loadError.status === 401) {
+          onLogout()
+        }
+      }
+    }
+    void loadRoles()
+    return () => { active = false }
+  }, [headers, onLogout])
 
   useEffect(() => {
     let active = true
@@ -288,6 +315,17 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
               const value = editor.values[field.key]
               if (field.type === 'boolean') {
                 return <label className="admin-checkbox" key={field.key}><input checked={value === true} onChange={(event) => updateField(field.key, event.target.checked)} type="checkbox" />{field.label}</label>
+              }
+              if (table === 'users' && field.key === 'roleId') {
+                const currentRoleId = String(value ?? '')
+                const hasCurrentRole = roleOptions.some((role) => role.id === currentRoleId)
+                return <label className="admin-field" key={field.key}>{field.label} *
+                  <select className="admin-select" onChange={(event) => updateField(field.key, event.target.value)} required value={currentRoleId}>
+                    <option value="">Selecione um perfil</option>
+                    {!hasCurrentRole && currentRoleId && <option value={currentRoleId}>Perfil atual</option>}
+                    {roleOptions.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                  </select>
+                </label>
               }
               const common = { id: `admin-${field.key}`, name: field.key, onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => updateField(field.key, event.target.value), placeholder: field.placeholder, required: field.required && !(editor.id && field.key === 'password'), value: String(value ?? '') }
               return <label className="admin-field" key={field.key}>{field.label}{field.required && !(editor.id && field.key === 'password') ? ' *' : ''}{field.type === 'textarea' ? <textarea {...common} rows={3} /> : <input {...common} type={field.type ?? 'text'} />}{field.help && <small>{field.help}</small>}</label>
