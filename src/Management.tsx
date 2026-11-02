@@ -133,7 +133,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
           if (!active) return
           setClients(clientList)
           setServices(serviceResult.myServicesList.list)
-          if (role === 'administrator' || role === 'manager') {
+          if (canManageServices) {
             try {
               const statusResult = await apiRequest<{ status: Status[] }>('/manager/services/status', { headers: requestHeaders })
               if (active) setStatuses(statusResult.status)
@@ -379,7 +379,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
             <label>Data inicial<input defaultValue={serviceForm === 'create' ? '' : dateInput(serviceForm.initialDate)} name="initialDate" required type="date" /></label>
             <label>Data final<input defaultValue={serviceForm === 'create' ? '' : dateInput(serviceForm.finishDate)} name="finishDate" type="date" /></label>
             <label>Cliente<select defaultValue={serviceForm === 'create' ? '' : serviceForm.clientId} name="clientId" required><option disabled value="">Selecione um cliente</option>{clients.filter((client) => client.active).map((client) => <option key={client.id} value={client.id}>{client.tradeName}</option>)}</select>{!clients.some((client) => client.active) && <small className="management-field-hint">Nenhum cliente ativo encontrado. Cadastre ou ative um cliente e abra o formulário novamente.</small>}</label>
-            {(role === 'administrator' || role === 'manager') && statuses.length > 0 && <label>Status<select defaultValue={serviceForm === 'create' ? '' : serviceForm.statusServiceId ?? ''} name="statusServiceId"><option value="">{serviceForm === 'create' ? 'Padrão (Fila)' : 'Manter status atual'}</option>{statuses.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}</select></label>}
+            {canManageServices && statuses.length > 0 && <label>Status<select defaultValue={serviceForm === 'create' ? '' : serviceForm.statusServiceId ?? ''} name="statusServiceId"><option value="">{serviceForm === 'create' ? 'Padrão (Fila)' : 'Manter status atual'}</option>{statuses.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}</select></label>}
             <label className="management-full-field">Detalhes<textarea defaultValue={serviceForm === 'create' ? '' : serviceForm.details} maxLength={2000} name="details" required rows={3} /></label>
           </div>
           {serviceForm !== 'create' && <p className="management-hint">Cada campo alterado é enviado separadamente, conforme o contrato atual da API. Uma data final vazia mantém o valor existente.</p>}
