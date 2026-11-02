@@ -190,6 +190,21 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
     setNotice('')
   }
 
+  async function openServiceForm() {
+    setError('')
+    setNotice('')
+    try {
+      setClients(await fetchAllClients(headers))
+      setServiceForm('create')
+    } catch (loadError) {
+      if (loadError instanceof Error && 'status' in loadError && loadError.status === 401) {
+        onLogout()
+        return
+      }
+      setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os clientes.')
+    }
+  }
+
   async function submitService(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!canManageServices || !(serviceForm === 'create' || serviceForm)) return
@@ -345,7 +360,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
         </div>
         <div className="management-actions">
           <label className="dashboard-search"><span aria-hidden="true">⌕</span><input aria-label={`Buscar ${view === 'services' ? 'serviços' : 'clientes'}`} onChange={(event) => setSearch(event.target.value)} placeholder={`Buscar ${view === 'services' ? 'serviços' : 'clientes'}`} type="search" value={search} /></label>
-          {view === 'services' && canManageServices && <button className="management-primary" onClick={() => { setServiceForm('create'); setError(''); setNotice('') }} type="button">+ Novo serviço</button>}
+          {view === 'services' && canManageServices && <button className="management-primary" onClick={() => void openServiceForm()} type="button">+ Novo serviço</button>}
           {view === 'clients' && canCreateClients && <button className="management-primary" onClick={() => { setClientForm('create'); setError(''); setNotice('') }} type="button">+ Novo cliente</button>}
         </div>
       </header>
@@ -363,7 +378,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
             <label>Valor (R$)<input defaultValue={serviceForm === 'create' ? '' : serviceForm.price} inputMode="decimal" name="price" pattern="\d+(\.\d+)?" placeholder="0.00" required /></label>
             <label>Data inicial<input defaultValue={serviceForm === 'create' ? '' : dateInput(serviceForm.initialDate)} name="initialDate" required type="date" /></label>
             <label>Data final<input defaultValue={serviceForm === 'create' ? '' : dateInput(serviceForm.finishDate)} name="finishDate" type="date" /></label>
-            <label>Cliente<select defaultValue={serviceForm === 'create' ? '' : serviceForm.clientId} name="clientId" required><option disabled value="">Selecione um cliente</option>{clients.filter((client) => client.active).map((client) => <option key={client.id} value={client.id}>{client.tradeName}</option>)}</select></label>
+            <label>Cliente<select defaultValue={serviceForm === 'create' ? '' : serviceForm.clientId} name="clientId" required><option disabled value="">Selecione um cliente</option>{clients.filter((client) => client.active).map((client) => <option key={client.id} value={client.id}>{client.tradeName}</option>)}</select>{!clients.some((client) => client.active) && <small className="management-field-hint">Nenhum cliente ativo encontrado. Cadastre ou ative um cliente e abra o formulário novamente.</small>}</label>
             {(role === 'administrator' || role === 'manager') && statuses.length > 0 && <label>Status<select defaultValue={serviceForm === 'create' ? '' : serviceForm.statusServiceId ?? ''} name="statusServiceId"><option value="">{serviceForm === 'create' ? 'Padrão (Fila)' : 'Manter status atual'}</option>{statuses.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}</select></label>}
             <label className="management-full-field">Detalhes<textarea defaultValue={serviceForm === 'create' ? '' : serviceForm.details} maxLength={2000} name="details" required rows={3} /></label>
           </div>
