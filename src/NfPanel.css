@@ -49,6 +49,8 @@
 .nf-reason { max-width: 135px !important; }
 .nf-deactivate-button { min-height: 30px; padding: 0 8px; border: 1px solid #d5a39d; border-radius: 3px; color: #8d3129; background: #faeae5; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
 .nf-deactivate-button:hover { border-color: #b84c3f; background: #f5d9d4; }
+.nf-activate-button { min-height: 30px; padding: 0 8px; border: 1px solid #9bc9b7; border-radius: 3px; color: #1b6951; background: #e4f3ec; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.nf-activate-button:hover { border-color: #2d9373; background: #d3ecdf; }
 .nf-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 2px 8px; border-bottom: 1px solid var(--field-border); }
 .nf-pagination-summary { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; }
 .nf-pagination-summary > span { min-width: 92px; color: var(--ink); font-variant-numeric: tabular-nums; }

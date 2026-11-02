@@ -406,6 +406,21 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     }
   }
 
+  async function activateNf(note: FiscalNote) {
+    setError('')
+    try {
+      await apiRequest(`/notes/${encodeURIComponent(note.id)}/activate`, { method: 'PATCH', headers })
+      setNotice('Nota fiscal reativada.')
+      setRefreshKey((key) => key + 1)
+    } catch (activationError) {
+      if (activationError instanceof Error && 'status' in activationError && activationError.status === 401) {
+        onLogout()
+        return
+      }
+      setError(responseMessage(activationError))
+    }
+  }
+
   async function openNfFile(note: FiscalNote, download: boolean) {
     if (!download) {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -567,8 +582,8 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
               <td>{displayDate(note.emissionDate)}</td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
               <td><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span>{note.deactivationReason && <small className="nf-reason" title={note.deactivationReason}>{note.deactivationReason}</small>}</td>
-              <td>{note.pathFile ? <><span className="nf-file-name" title={note.pathFile}>{note.pathFile.split('/').pop()}</span><span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span></> : null}<label className="nf-file-repair">Reanexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label></td>
-              {role !== 'observer' && <td>{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button" aria-label={`Desativar NF ${note.numberNf || ''}`}>Desativar</button> : '—'}</td>}
+              <td>{note.pathFile ? <><span className="nf-file-name" title={note.pathFile}>{note.pathFile.split('/').pop()}</span><span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span></> : null}{role !== 'observer' && <label className="nf-file-repair">Anexar/Reanexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}</td>
+              {role !== 'observer' && <td>{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button" aria-label={`Desativar NF ${note.numberNf || ''}`}>Desativar</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button" aria-label={`Reativar NF ${note.numberNf || ''}`}>Reativar</button> : '—'}</td>}
             </tr>)}
             {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={role !== 'observer' ? 7 : 6}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
           </tbody>
