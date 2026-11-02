@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { apiFileRequest, apiRequest, ApiRequestError } from './services/api'
 import { extractNfFields, type ExtractedNfFields, type NfPdfField } from './services/nfPdf'
 import './NfPanel.css'
@@ -117,6 +117,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const canCreate = role === 'administrator' || role === 'finance'
   const headers = { Authorization: `Bearer ${token}` }
   const [notes, setNotes] = useState<FiscalNote[]>([])
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0, hasMore: false })
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [draftFilters, setDraftFilters] = useState<Filters>(emptyFilters)
@@ -471,6 +472,15 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     setPreviewError('')
   }
 
+  function toggleNoteDetails(noteId: string) {
+    setExpandedNotes((current) => {
+      const next = new Set(current)
+      if (next.has(noteId)) next.delete(noteId)
+      else next.add(noteId)
+      return next
+    })
+  }
+
   async function submitDeactivation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!deactivatingNote) return
@@ -579,18 +589,35 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
       <div className="nf-list-heading"><div><p className="dashboard-card-index">REGISTROS FISCAIS</p><h3>Notas {filters.status === 'active' ? 'ativas' : filters.status === 'inactive' ? 'inativas' : 'canceladas'}</h3></div><button className="nf-refresh" disabled={isLoading} onClick={() => setRefreshKey((key) => key + 1)} type="button" title="Atualizar lista">Atualizar</button></div>
       <div className="dashboard-table-scroll nf-table-scroll" role="region" aria-label="Lista de notas fiscais" tabIndex={0}>
         <table className="dashboard-table nf-table">
-          <thead><tr><th scope="col">Nota / chave</th><th scope="col">Cliente / serviço</th><th scope="col">Emissão</th><th scope="col">Valor</th><th scope="col">Situação</th><th scope="col">Arquivo</th>{role !== 'observer' && <th scope="col">Ação</th>}</tr></thead>
+          <thead><tr><th scope="col">Nota</th><th scope="col">Cliente</th><th scope="col">Emissão</th><th scope="col">Valor</th><th scope="col">Detalhes</th></tr></thead>
           <tbody>
-            {notes.map((note) => <tr key={note.id}>
-              <td><strong>{note.numberNf || 'Sem número'}</strong><small className="nf-mono" title={note.acessKey || ''}>{note.acessKey || 'Sem chave'}</small></td>
-              <td><span title={note.thirdPartyClientId}>{clientNames.get(note.thirdPartyClientId) || note.thirdPartyClientId.slice(0, 8)}</span><small title={note.servicesId}>Serviço · {note.servicesId.slice(0, 8)}</small>{note.movimentationId && <small title={note.movimentationId}>Mov. · {note.movimentationId.slice(0, 8)}</small>}</td>
+            {notes.map((note) => {
+              const isExpanded = expandedNotes.has(note.id)
+              return <Fragment key={note.id}>
+              <tr className={isExpanded ? 'is-expanded' : undefined}>
+              <td><strong>{note.numberNf || 'Sem número'}</strong></td>
+              <td><span title={note.thirdPartyClientId}>{clientNames.get(note.thirdPartyClientId) || note.thirdPartyClientId.slice(0, 8)}</span></td>
               <td>{displayDate(note.emissionDate)}</td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
-              <td><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span>{note.deactivationReason && <small className="nf-reason" title={note.deactivationReason}>{note.deactivationReason}</small>}</td>
-              <td><span className={`nf-file-status ${note.hasFile ? 'is-attached' : 'is-missing'}`}>{note.hasFile ? `Anexado${note.pathFile ? ` · ${note.pathFile.split('/').pop()}` : ''}` : 'Sem anexo'}</span>{note.hasFile && <span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span>}{role !== 'observer' && <label className="nf-file-repair">Anexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}</td>
-              {role !== 'observer' && <td>{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button" aria-label={`Desativar NF ${note.numberNf || ''}`}>Desativar</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button" aria-label={`Reativar NF ${note.numberNf || ''}`}>Reativar</button> : '—'}</td>}
-            </tr>)}
-            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={role !== 'observer' ? 7 : 6}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
+              <td><button className="nf-expand-button" aria-expanded={isExpanded} onClick={() => toggleNoteDetails(note.id)} type="button">{isExpanded ? 'Ocultar' : 'Ver detalhes'}</button></td>
+            </tr>
+            {isExpanded && <tr className="nf-details-row"><td colSpan={5}>
+              <div className="nf-details-grid">
+                <div><span>Chave de acesso</span><strong className="nf-mono">{note.acessKey || 'Sem chave'}</strong></div>
+                <div><span>Serviço</span><strong>{note.servicesId.slice(0, 8)}</strong></div>
+                <div><span>Movimentação</span><strong>{note.movimentationId ? note.movimentationId.slice(0, 8) : 'Não vinculada'}</strong></div>
+                <div><span>Situação</span><strong><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span></strong></div>
+                <div className="nf-details-file"><span>Arquivo PDF</span><strong className={`nf-file-status ${note.hasFile ? 'is-attached' : 'is-missing'}`}>{note.hasFile ? `Anexado${note.pathFile ? ` · ${note.pathFile.split('/').pop()}` : ''}` : 'Sem anexo'}</strong>
+                  {note.hasFile && <span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span>}
+                  {role !== 'observer' && <label className="nf-file-repair">Anexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}
+                </div>
+                {note.deactivationReason && <div><span>Motivo da desativação</span><strong>{note.deactivationReason}</strong></div>}
+                {role !== 'observer' && <div className="nf-details-actions">{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button">Desativar nota</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button">Reativar nota</button> : null}</div>}
+              </div>
+            </td></tr>}
+            </Fragment>
+            })}
+            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={5}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
           </tbody>
         </table>
       </div>
