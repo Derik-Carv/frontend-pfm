@@ -33,6 +33,9 @@
 .nf-table .nf-mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .nf-money { color: var(--heading) !important; font-weight: 700; white-space: nowrap; }
 .nf-file-name { display: block; max-width: 150px; overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.nf-file-actions { display: flex; gap: 5px; margin-top: 5px; }
+.nf-file-actions button { padding: 3px 6px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 9px; cursor: pointer; }
+.nf-file-actions button:hover { border-color: var(--clay); }
 .nf-reason { max-width: 135px !important; }
 .nf-deactivate-button { min-height: 30px; padding: 0 8px; border: 1px solid #d5a39d; border-radius: 3px; color: #8d3129; background: #faeae5; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
 .nf-deactivate-button:hover { border-color: #b84c3f; background: #f5d9d4; }

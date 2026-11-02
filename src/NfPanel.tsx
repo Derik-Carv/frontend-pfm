@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { apiRequest, ApiRequestError } from './services/api'
+import { apiFileRequest, apiRequest, ApiRequestError } from './services/api'
 import { extractNfFields, type ExtractedNfFields, type NfPdfField } from './services/nfPdf'
 import './NfPanel.css'
 
@@ -385,6 +385,31 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     }
   }
 
+  async function openNfFile(note: FiscalNote, download: boolean) {
+    const previewWindow = download ? null : window.open('', '_blank')
+    try {
+      const response = await apiFileRequest(`/notes/${encodeURIComponent(note.id)}/file${download ? '?download=true' : ''}`, token)
+      const url = URL.createObjectURL(await response.blob())
+      if (download) {
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = note.pathFile?.split('/').pop() || `nota-${note.numberNf || note.id}.pdf`
+        anchor.click()
+        anchor.remove()
+      } else if (previewWindow) {
+        previewWindow.location.href = url
+      }
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (fileError) {
+      previewWindow?.close()
+      if (fileError instanceof Error && 'status' in fileError && fileError.status === 401) {
+        onLogout()
+        return
+      }
+      setError(responseMessage(fileError))
+    }
+  }
+
   async function submitDeactivation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!deactivatingNote) return
@@ -501,7 +526,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
               <td>{displayDate(note.emissionDate)}</td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
               <td><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span>{note.deactivationReason && <small className="nf-reason" title={note.deactivationReason}>{note.deactivationReason}</small>}</td>
-              <td>{note.pathFile ? <span className="nf-file-name" title={note.pathFile}>{note.pathFile.split('/').pop()}</span> : '—'}</td>
+              <td>{note.pathFile ? <><span className="nf-file-name" title={note.pathFile}>{note.pathFile.split('/').pop()}</span><span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span></> : '—'}</td>
               {role !== 'observer' && <td>{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button" aria-label={`Desativar NF ${note.numberNf || ''}`}>Desativar</button> : '—'}</td>}
             </tr>)}
             {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={role !== 'observer' ? 7 : 6}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}

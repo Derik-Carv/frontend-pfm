@@ -1,4 +1,4 @@
-const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3336').replace(/\/$/, '')
+export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3336').replace(/\/$/, '')
 
 export class ApiRequestError extends Error {
   readonly status: number
@@ -45,4 +45,18 @@ export async function apiRequest<T>(
   }
 
   return data as T
+}
+
+export async function apiFileRequest(path: string, token: string) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    const message = typeof data === 'object' && data !== null && 'message' in data && typeof data.message === 'string'
+      ? data.message
+      : `A solicitação falhou (${response.status}).`
+    throw new ApiRequestError(message, response.status, data)
+  }
+  return response
 }
