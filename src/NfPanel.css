@@ -36,6 +36,8 @@
 .nf-file-actions { display: flex; gap: 5px; margin-top: 5px; }
 .nf-file-actions button { padding: 3px 6px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 9px; cursor: pointer; }
 .nf-file-actions button:hover { border-color: var(--clay); }
+.nf-file-repair { display: inline-block; margin-top: 5px; color: var(--muted); font-size: 9px; cursor: pointer; }
+.nf-file-repair input { display: block; width: 0; height: 0; opacity: 0; }
 .nf-preview-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 22px; background: rgb(4 24 19 / 72%); }
 .nf-preview-modal { display: flex; width: min(940px, 100%); height: min(90vh, 820px); flex-direction: column; border: 1px solid var(--field-border); background: var(--paper); box-shadow: 0 18px 60px rgb(0 0 0 / 35%); }
 .nf-preview-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; border-bottom: 1px solid var(--field-border); }
