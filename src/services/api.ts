@@ -23,7 +23,7 @@ export async function apiRequest<T>(
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
     if (isFormData) {
       headers.delete('Content-Type')
-    } else if (!headers.has('Content-Type')) {
+    } else if (options.body != null && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
     response = await fetch(`${API_URL}${path}`, {
