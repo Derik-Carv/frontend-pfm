@@ -142,6 +142,9 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const [error, setError] = useState('')
   const [errorDetails, setErrorDetails] = useState<string[]>([])
   const [notice, setNotice] = useState('')
+  const [previewNote, setPreviewNote] = useState<FiscalNote | null>(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -386,7 +389,12 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   }
 
   async function openNfFile(note: FiscalNote, download: boolean) {
-    const previewWindow = download ? null : window.open('', '_blank')
+    if (!download) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl('')
+      setPreviewNote(note)
+      setIsPreviewLoading(true)
+    }
     try {
       const response = await apiFileRequest(`/notes/${encodeURIComponent(note.id)}/file${download ? '?download=true' : ''}`, token)
       const url = URL.createObjectURL(await response.blob())
@@ -396,18 +404,29 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
         anchor.download = note.pathFile?.split('/').pop() || `nota-${note.numberNf || note.id}.pdf`
         anchor.click()
         anchor.remove()
-      } else if (previewWindow) {
-        previewWindow.location.href = url
+      } else {
+        setPreviewUrl(url)
       }
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch (fileError) {
-      previewWindow?.close()
+      if (!download) {
+        setPreviewNote(null)
+        setIsPreviewLoading(false)
+      }
       if (fileError instanceof Error && 'status' in fileError && fileError.status === 401) {
         onLogout()
         return
       }
       setError(responseMessage(fileError))
+    } finally {
+      if (!download) setIsPreviewLoading(false)
     }
+  }
+
+  function closeNfPreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl('')
+    setPreviewNote(null)
+    setIsPreviewLoading(false)
   }
 
   async function submitDeactivation(event: FormEvent<HTMLFormElement>) {
@@ -543,6 +562,21 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
           <button aria-label="Última página de notas" disabled={page >= pagination.totalPages || isLoading} onClick={() => setPage(pagination.totalPages)} type="button">»</button>
         </nav>
       </div>
+      {previewNote && (
+        <div className="nf-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeNfPreview() }}>
+          <section aria-label={`Visualização da nota ${previewNote.numberNf || ''}`} aria-modal="true" className="nf-preview-modal" role="dialog">
+            <header className="nf-preview-header">
+              <div><p className="dashboard-card-index">VISUALIZAÇÃO</p><h3>Nota fiscal {previewNote.numberNf || 'sem número'}</h3></div>
+              <button className="dashboard-close" onClick={closeNfPreview} type="button" aria-label="Fechar visualização">×</button>
+            </header>
+            {isPreviewLoading ? <div className="nf-preview-loading">Carregando PDF...</div> : previewUrl ? <iframe className="nf-preview-frame" src={previewUrl} title={`Nota fiscal ${previewNote.numberNf || ''}`} /> : <p className="nf-preview-loading">Não foi possível carregar o PDF.</p>}
+            <footer className="nf-preview-actions">
+              <button className="management-secondary" onClick={() => void openNfFile(previewNote, true)} type="button">Baixar PDF</button>
+              <button className="management-primary" onClick={closeNfPreview} type="button">Fechar</button>
+            </footer>
+          </section>
+        </div>
+      )}
     </section>
   )
 }
