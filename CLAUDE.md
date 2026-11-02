@@ -54,10 +54,10 @@ Os perfis são extraídos do payload JWT (`tokenRole`):
 ## 3. Padrões de Projeto e Arquitetura
 
 ### 3.1. Arquitetura de Componentes
-- O projeto não utiliza React Router tradicional. A navegação entre visualizações principais ocorre por chaveamento de estado centralizado no [`App.tsx`](file:///home/derik/Documentos/mobile/frontend-pfm/src/App.tsx) e abas/painéis no [`Dashboard.tsx`](file:///home/derik/Documentos/mobile/frontend-pfm/src/Dashboard.tsx) (`services` | `management` | `nf` | `admin`).
+- O projeto não utiliza React Router tradicional. A navegação entre visualizações principais ocorre por chaveamento de estado centralizado no `App.tsx` e abas/painéis no `Dashboard.tsx` (`services` | `management` | `nf` | `admin`).
 - Os componentes de tela são auto-contidos com seu respectivo arquivo CSS modular (`NfPanel.tsx` + `NfPanel.css`, `AdminPanel.tsx` + `AdminPanel.css`, etc.).
 
-### 3.2. Camada de Comunicação com a API ([`src/services/api.ts`](file:///home/derik/Documentos/mobile/frontend-pfm/src/services/api.ts))
+### 3.2. Camada de Comunicação com a API (`src/services/api.ts`)
 - **`apiRequest<T>(path, options)`**:
   - Encapsula chamadas REST utilizando `fetch`.
   - Injeta automaticamente `Content-Type: application/json` quando o corpo não for `FormData`.
@@ -68,7 +68,7 @@ Os perfis são extraídos do payload JWT (`tokenRole`):
 - **Variáveis de Ambiente**:
   - `VITE_API_URL`: URL base da API. Tratada com fallback para `http://localhost:3336` e remoção da barra final.
 
-### 3.3. Extração e Parse de PDF ([`src/services/nfPdf.ts`](file:///home/derik/Documentos/mobile/frontend-pfm/src/services/nfPdf.ts))
+### 3.3. Extração e Parse de PDF (`src/services/nfPdf.ts`)
 - Extração de texto no cliente com `pdfjs-dist`.
 - Identificação por Regex de Número de NF, Chave de Acesso de 44 dígitos, Data de Emissão e Valores Monetários.
 - Campos extraídos recebem níveis de confiança (`high`, `medium`, `low`) para validação humana antes da submissão.
