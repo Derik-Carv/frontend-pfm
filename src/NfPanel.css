@@ -25,13 +25,13 @@
 .nf-refresh { min-height: 34px; padding-inline: 12px; border: 1px solid var(--field-border); border-radius: 3px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
 .nf-refresh:disabled { opacity: .55; cursor: wait; }
 .nf-table-scroll { max-height: min(58vh, 680px); }
-.nf-table { width: 100%; min-width: 0; table-layout: fixed; }
+.nf-table { width: 100%; min-width: 520px; table-layout: fixed; }
 .nf-table th { padding: 10px 8px; font-size: 10px; }
 .nf-table td { min-width: 0; padding: 10px 8px; }
-.nf-table th:first-child, .nf-table td:first-child { width: 22%; min-width: 0; }
-.nf-table th:nth-child(2), .nf-table td:nth-child(2) { width: 33%; min-width: 0; }
-.nf-table th:nth-child(3), .nf-table td:nth-child(3) { width: 25%; min-width: 0; }
-.nf-table th:last-child, .nf-table td:last-child { width: 20%; min-width: 0; text-align: right; }
+.nf-table th:first-child, .nf-table td:first-child { width: 20%; min-width: 0; }
+.nf-table th:nth-child(2), .nf-table td:nth-child(2) { width: 40%; min-width: 0; }
+.nf-table th:nth-child(3), .nf-table td:nth-child(3) { width: 22%; min-width: 0; }
+.nf-table th:last-child, .nf-table td:last-child { width: 18%; min-width: 0; text-align: right; }
 .nf-cell-truncate { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nf-table td small { display: block; max-width: 250px; overflow: hidden; margin-top: 4px; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .nf-table .nf-mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; word-break: break-all; }

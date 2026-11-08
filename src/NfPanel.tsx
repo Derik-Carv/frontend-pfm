@@ -670,7 +670,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
           <tbody>
             {notes.map((note) => {
               const isExpanded = expandedNotes.has(note.id)
-              const clientName = clientNames.get(note.thirdPartyClientId) || 'Carregando...'
+              const clientName = clientNames.get(note.thirdPartyClientId) || `Cliente ${note.thirdPartyClientId.slice(0, 8)}`
               return <Fragment key={note.id}>
               <tr className={isExpanded ? 'is-expanded' : undefined}>
               <td><strong className="nf-cell-truncate" title={`Nota ${note.numberNf || 'sem número'}`}>{note.numberNf || 'Sem número'}</strong></td>
