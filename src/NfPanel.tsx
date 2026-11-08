@@ -144,6 +144,10 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const [error, setError] = useState('')
   const [errorDetails, setErrorDetails] = useState<string[]>([])
   const [notice, setNotice] = useState('')
+  const [sendingEmailNoteId, setSendingEmailNoteId] = useState<string | null>(null)
+  const [emailModalNote, setEmailModalNote] = useState<FiscalNote | null>(null)
+  const [emailModalDestination, setEmailModalDestination] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
   const [previewNote, setPreviewNote] = useState<FiscalNote | null>(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [isPreviewLoading, setIsPreviewLoading] = useState(false)
@@ -183,6 +187,23 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     void loadClientServices()
     return () => { active = false }
   }, [onLogout, selectedClientId, token])
+
+  useEffect(() => {
+    let active = true
+    const requestHeaders = { Authorization: `Bearer ${token}` }
+
+    async function loadInitialClients() {
+      try {
+        const allClients = await loadAllClients(requestHeaders)
+        if (active) setClients(allClients)
+      } catch {
+        // silencioso no carregamento em background dos clientes da tabela
+      }
+    }
+
+    void loadInitialClients()
+    return () => { active = false }
+  }, [token])
 
   useEffect(() => {
     let active = true
@@ -472,6 +493,62 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     setPreviewError('')
   }
 
+  function openEmailModal(note: FiscalNote) {
+    setEmailModalNote(note)
+    setEmailModalDestination('')
+    setError('')
+    setNotice('')
+  }
+
+  function closeEmailModal() {
+    setEmailModalNote(null)
+    setEmailModalDestination('')
+  }
+
+  async function handleSendEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!emailModalNote) return
+
+    const email = emailModalDestination.trim()
+    if (!email) {
+      setError('Informe um e-mail de destino válido.')
+      return
+    }
+
+    setIsSendingEmail(true)
+    setSendingEmailNoteId(emailModalNote.id)
+    setError('')
+    setNotice('')
+
+    try {
+      const clientName = clientNames.get(emailModalNote.thirdPartyClientId) || 'Cliente'
+      const payload = {
+        numberNf: emailModalNote.numberNf || '',
+        type: 'Serviço Prestado',
+        value: String(emailModalNote.totalValue || '0'),
+        emissionDate: emailModalNote.emissionDate ? emailModalNote.emissionDate.slice(0, 10) : '',
+        acessKey: emailModalNote.acessKey || '',
+        clientName,
+        details: `Envio de nota fiscal ${emailModalNote.numberNf || ''} para ${clientName}`,
+        destinationEmail: email,
+      }
+
+      await apiRequest('/nf/sendemail', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      })
+
+      setNotice(`E-mail com a nota fiscal ${emailModalNote.numberNf || ''} enviado com sucesso para ${email}.`)
+      closeEmailModal()
+    } catch (err) {
+      setError(responseMessage(err))
+    } finally {
+      setIsSendingEmail(false)
+      setSendingEmailNoteId(null)
+    }
+  }
+
   function toggleNoteDetails(noteId: string) {
     setExpandedNotes((current) => {
       const next = new Set(current)
@@ -589,35 +666,46 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
       <div className="nf-list-heading"><div><p className="dashboard-card-index">REGISTROS FISCAIS</p><h3>Notas {filters.status === 'active' ? 'ativas' : filters.status === 'inactive' ? 'inativas' : 'canceladas'}</h3></div><button className="nf-refresh" disabled={isLoading} onClick={() => setRefreshKey((key) => key + 1)} type="button" title="Atualizar lista">Atualizar</button></div>
       <div className="dashboard-table-scroll nf-table-scroll" role="region" aria-label="Lista de notas fiscais" tabIndex={0}>
         <table className="dashboard-table nf-table">
-          <thead><tr><th scope="col">Nota</th><th scope="col">Cliente</th><th scope="col">Emissão</th><th scope="col">Valor</th><th scope="col">Detalhes</th></tr></thead>
+          <thead><tr><th scope="col">Nota</th><th scope="col">Cliente</th><th scope="col">Valor</th><th scope="col">Ação</th></tr></thead>
           <tbody>
             {notes.map((note) => {
               const isExpanded = expandedNotes.has(note.id)
+              const clientName = clientNames.get(note.thirdPartyClientId) || 'Carregando...'
               return <Fragment key={note.id}>
               <tr className={isExpanded ? 'is-expanded' : undefined}>
-              <td><strong>{note.numberNf || 'Sem número'}</strong></td>
-              <td><span title={note.thirdPartyClientId}>{clientNames.get(note.thirdPartyClientId) || note.thirdPartyClientId.slice(0, 8)}</span></td>
-              <td>{displayDate(note.emissionDate)}</td>
+              <td><strong className="nf-cell-truncate" title={`Nota ${note.numberNf || 'sem número'}`}>{note.numberNf || 'Sem número'}</strong></td>
+              <td><span className="nf-cell-truncate" title={clientName}>{clientName}</span></td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
-              <td><button className="nf-expand-button" aria-expanded={isExpanded} onClick={() => toggleNoteDetails(note.id)} type="button">{isExpanded ? 'Ocultar' : 'Ver detalhes'}</button></td>
+              <td><button className="nf-expand-button" aria-expanded={isExpanded} onClick={() => toggleNoteDetails(note.id)} type="button">{isExpanded ? 'Ocultar' : 'Ver mais'}</button></td>
             </tr>
-            {isExpanded && <tr className="nf-details-row"><td colSpan={5}>
-              <div className="nf-details-grid">
-                <div><span>Chave de acesso</span><strong className="nf-mono">{note.acessKey || 'Sem chave'}</strong></div>
-                <div><span>Serviço</span><strong>{note.servicesId.slice(0, 8)}</strong></div>
-                <div><span>Movimentação</span><strong>{note.movimentationId ? note.movimentationId.slice(0, 8) : 'Não vinculada'}</strong></div>
-                <div><span>Situação</span><strong><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span></strong></div>
-                <div className="nf-details-file"><span>Arquivo PDF</span><strong className={`nf-file-status ${note.hasFile ? 'is-attached' : 'is-missing'}`}>{note.hasFile ? `Anexado${note.pathFile ? ` · ${note.pathFile.split('/').pop()}` : ''}` : 'Sem anexo'}</strong>
-                  {note.hasFile && <span className="nf-file-actions"><button type="button" onClick={() => void openNfFile(note, false)}>Ver</button><button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button></span>}
-                  {role !== 'observer' && <label className="nf-file-repair">Anexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}
+            {isExpanded && <tr className="nf-details-row"><td colSpan={4}>
+              <div className="nf-details-container">
+                <div className="nf-details-grid">
+                  <div><span>Data de Emissão</span><strong>{displayDate(note.emissionDate)}</strong></div>
+                  <div><span>Situação</span><strong><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span></strong></div>
+                  <div className="nf-details-full"><span>Chave de acesso</span><strong className="nf-mono">{note.acessKey || 'Sem chave'}</strong></div>
+                  <div className="nf-details-file">
+                    <span>Arquivo PDF</span>
+                    <strong className={`nf-file-status ${note.hasFile ? 'is-attached' : 'is-missing'}`}>{note.hasFile ? `Anexado${note.pathFile ? ` · ${note.pathFile.split('/').pop()}` : ''}` : 'Sem anexo'}</strong>
+                    <div className="nf-file-actions">
+                      {note.hasFile && <button type="button" onClick={() => void openNfFile(note, false)}>Ver</button>}
+                      {note.hasFile && <button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button>}
+                      {note.hasFile && <button className="nf-send-email-btn" disabled={sendingEmailNoteId === note.id} type="button" onClick={() => openEmailModal(note)}>{sendingEmailNoteId === note.id ? 'Enviando...' : '✉ Enviar por e-mail'}</button>}
+                      {role !== 'observer' && <label className="nf-file-repair">Anexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}
+                    </div>
+                  </div>
+                  {note.deactivationReason && <div className="nf-details-full"><span>Motivo da desativação</span><strong>{note.deactivationReason}</strong></div>}
+                  {role !== 'observer' && (note.active && !note.cancelDate || !note.active) && (
+                    <div className="nf-details-actions">
+                      {note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button">Desativar nota</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button">Reativar nota</button> : null}
+                    </div>
+                  )}
                 </div>
-                {note.deactivationReason && <div><span>Motivo da desativação</span><strong>{note.deactivationReason}</strong></div>}
-                {role !== 'observer' && <div className="nf-details-actions">{note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button">Desativar nota</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button">Reativar nota</button> : null}</div>}
               </div>
             </td></tr>}
             </Fragment>
             })}
-            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={5}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
+            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={4}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -643,6 +731,40 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
               <button className="management-secondary" onClick={() => void openNfFile(previewNote, true)} type="button">Baixar PDF</button>
               <button className="management-primary" onClick={closeNfPreview} type="button">Fechar</button>
             </footer>
+          </section>
+        </div>
+      )}
+
+      {emailModalNote && (
+        <div className="nf-preview-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeEmailModal() }}>
+          <section aria-label="Enviar nota fiscal por e-mail" aria-modal="true" className="nf-preview-modal nf-email-modal" role="dialog">
+            <header className="nf-preview-header">
+              <div><p className="dashboard-card-index">COMUNICAÇÃO</p><h3>Enviar NF {emailModalNote.numberNf || 'sem número'} por e-mail</h3></div>
+              <button className="dashboard-close" onClick={closeEmailModal} type="button" aria-label="Fechar modal de envio">×</button>
+            </header>
+            <form onSubmit={(e) => void handleSendEmail(e)} className="nf-email-form">
+              <p className="nf-email-desc">
+                Confirme o e-mail de destino para envio da nota fiscal <strong>{emailModalNote.numberNf || ''}</strong> do cliente <strong>{clientNames.get(emailModalNote.thirdPartyClientId) || 'Cliente'}</strong> com o anexo PDF correspondente.
+              </p>
+              <label htmlFor="nf-destination-email">
+                E-mail de destino
+                <input
+                  id="nf-destination-email"
+                  type="email"
+                  required
+                  placeholder="exemplo@cliente.com"
+                  value={emailModalDestination}
+                  onChange={(e) => setEmailModalDestination(e.target.value)}
+                  autoFocus
+                />
+              </label>
+              <footer className="nf-preview-actions">
+                <button className="management-secondary" onClick={closeEmailModal} type="button" disabled={isSendingEmail}>Cancelar</button>
+                <button className="management-primary" type="submit" disabled={isSendingEmail}>
+                  {isSendingEmail ? 'Enviando e-mail...' : 'Confirmar e Enviar'}
+                </button>
+              </footer>
+            </form>
           </section>
         </div>
       )}

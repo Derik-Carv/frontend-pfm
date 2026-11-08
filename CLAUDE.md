@@ -24,7 +24,10 @@ O **frontend-pfm** é a interface web do Sistema Financeiro e Operacional PFM, p
 4. **Notas Fiscais (NfPanel)**:
    - Emissão manual ou importação automatizada via leitura de PDF.
    - Vinculação com Cliente, Movimentação e Serviço.
-   - Visualização detalhada (accordion/expandable row) com chave de acesso, status, anexo PDF (download, preview modal com `pdfjs-dist`) e desativação com motivo obrigatório.
+   - Tabela compacta e responsiva sem scroll horizontal forçado (exibe apenas os dados essenciais da nota: Nota, Cliente, Valor e Ação).
+   - Visualização detalhada (accordion/expandable row) com data de emissão, situação, chave de acesso formatada, anexo PDF (download, preview modal com `pdfjs-dist`), desativação com motivo obrigatório e disparo de e-mail (`/nf/sendemail`).
+   - Botão de envio por e-mail disponibilizado unicamente quando houver anexo PDF na nota fiscal.
+   - Não expor IDs brutos técnicos aos usuários; exibir sempre nomes amigáveis (ex: nome fantasia do cliente).
 5. **Administração de Usuários (AdminPanel)**:
    - Listagem e criação de usuários com perfis de acesso (RBAC).
    - Reset de senha administrativa e alternância de status ativo/inativo.

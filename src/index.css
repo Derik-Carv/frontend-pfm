@@ -28,18 +28,18 @@
 
 :root[data-theme='dark'] {
   color: #e5f3ec;
-  background: #0b2119;
+  background: #0d1e18;
 
-  --paper: #0b2119;
-  --heading: #e5f3ec;
-  --label: #d0e6d9;
+  --paper: #0d1e18;
+  --heading: #e8f5ef;
+  --label: #bcd8cb;
   --ink: #e5f3ec;
-  --muted: #9db8aa;
-  --field-bg: #123528;
-  --field-border: #285b47;
-  --message-bg: #173e30;
-  --message-text: #d9efe3;
-  --footnote: #9db8aa;
+  --muted: #8caea0;
+  --field-bg: #132d24;
+  --field-border: #1e4537;
+  --message-bg: #15382c;
+  --message-text: #e0f2e9;
+  --footnote: #8caea0;
   color-scheme: dark;
 }
 
