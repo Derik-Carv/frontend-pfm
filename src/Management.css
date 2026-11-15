@@ -31,7 +31,9 @@
 .table-chevron { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: 8px; font-size: 11px; color: var(--muted); transition: transform 200ms ease; vertical-align: middle; }
 .table-chevron.is-open { transform: rotate(90deg); color: var(--clay); }
 .management-detail-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.management-edit { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border: 1px solid var(--field-border); border-radius: 3px; color: #1b6951; background: var(--field-bg); font-size: 17px; cursor: pointer; }
+.management-edit-btn { display: inline-flex; min-height: 36px; height: 36px; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; border: 1px solid var(--field-border); border-radius: 4px; color: var(--ink); background: var(--field-bg); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; transition: all 120ms ease; }
+.management-edit-btn:hover { border-color: #2d9373; color: #fff; background: #2d9373; }
+.management-edit { display: grid; width: 34px; height: 34px; max-height: 34px; aspect-ratio: 1; place-items: center; border: 1px solid var(--field-border); border-radius: 3px; color: #1b6951; background: var(--field-bg); font-size: 17px; cursor: pointer; flex-shrink: 0; }
 .management-edit:hover { border-color: #2d9373; color: #fff; background: #2d9373; }
 .management-status { display: inline-flex; min-height: 23px; align-items: center; padding: 0 8px; border-radius: 2px; font-size: 10px; font-weight: 700; }
 .management-status.is-active { color: #1b6951; background: #e4f3ec; }
@@ -57,8 +59,8 @@
 
 @media (max-width: 600px) {
   .management-details-grid { grid-template-columns: 1fr; }
-  .management-details-actions { justify-content: stretch; }
-  .management-details-actions button { width: 100%; }
+  .management-details-actions { justify-content: flex-end; }
+  .management-details-actions button { width: auto; max-width: 100%; }
 }
 
 @media (max-width: 720px) {

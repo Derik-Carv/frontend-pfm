@@ -117,7 +117,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const canCreate = role === 'administrator' || role === 'finance'
   const headers = { Authorization: `Bearer ${token}` }
   const [notes, setNotes] = useState<FiscalNote[]>([])
-  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+  const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null)
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0, hasMore: false })
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [draftFilters, setDraftFilters] = useState<Filters>(emptyFilters)
@@ -550,12 +550,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   }
 
   function toggleNoteDetails(noteId: string) {
-    setExpandedNotes((current) => {
-      const next = new Set(current)
-      if (next.has(noteId)) next.delete(noteId)
-      else next.add(noteId)
-      return next
-    })
+    setExpandedNoteId((current) => (current === noteId ? null : noteId))
   }
 
   async function submitDeactivation(event: FormEvent<HTMLFormElement>) {
@@ -676,7 +671,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
           </thead>
           <tbody>
             {notes.map((note) => {
-              const isExpanded = expandedNotes.has(note.id)
+              const isExpanded = expandedNoteId === note.id
               const clientName = clientNames.get(note.thirdPartyClientId) || `Cliente ${note.thirdPartyClientId.slice(0, 8)}`
               return <Fragment key={note.id}>
               <tr
@@ -698,9 +693,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
               </td>
               <td><span className="nf-cell-truncate" title={clientName}>{clientName}</span></td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
-              <td style={{ textAlign: 'right' }}>
-                <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
-              </td>
+              <td style={{ textAlign: 'right' }}></td>
             </tr>
             {isExpanded && <tr className="nf-details-row"><td colSpan={4}>
               <div className="nf-details-container" onClick={(e) => e.stopPropagation()}>

@@ -95,8 +95,8 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
   const [notice, setNotice] = useState('')
   const [serviceForm, setServiceForm] = useState<'create' | Service | null>(null)
   const [clientForm, setClientForm] = useState<'create' | Client | null>(null)
-  const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
-  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
+  const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
+  const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null)
   const [reloadCount, setReloadCount] = useState(0)
 
   const canManageServices = serviceRoles.includes(role)
@@ -416,30 +416,18 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
             </thead>
             <tbody>
               {filteredServices.map((service) => {
-                const isExpanded = expandedServices.has(service.id)
+                const isExpanded = expandedServiceId === service.id
                 const clientName = clients.find((client) => client.id === service.clientId)?.tradeName ?? service.clientName ?? 'Cliente'
                 return (
                   <Fragment key={service.id}>
                     <tr
                       className={`is-clickable ${isExpanded ? 'is-expanded' : ''}`}
-                      onClick={() => {
-                        setExpandedServices((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(service.id)) next.delete(service.id)
-                          else next.add(service.id)
-                          return next
-                        })
-                      }}
+                      onClick={() => setExpandedServiceId((current) => current === service.id ? null : service.id)}
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          setExpandedServices((prev) => {
-                            const next = new Set(prev)
-                            if (next.has(service.id)) next.delete(service.id)
-                            else next.add(service.id)
-                            return next
-                          })
+                          setExpandedServiceId((current) => current === service.id ? null : service.id)
                         }
                       }}
                       role="button"
@@ -451,14 +439,12 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                       </td>
                       <td>{clientName}</td>
                       <td><span className="dashboard-price-cell">{formatMoney(service.price)}</span></td>
-                      <td style={{ textAlign: 'right' }}>
-                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
-                      </td>
+                      <td style={{ textAlign: 'right' }}></td>
                     </tr>
                     {isExpanded && (
                       <tr className="management-details-row">
                         <td colSpan={4}>
-                          <div className="management-details-container">
+                          <div className="management-details-container" onClick={(e) => e.stopPropagation()}>
                             <div className="management-details-grid">
                               <div>
                                 <span>Data Inicial</span>
@@ -480,7 +466,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                               </div>
                               <div className="management-details-actions">
                                 <button
-                                  className="management-edit"
+                                  className="management-edit-btn"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     setServiceForm(service)
@@ -491,7 +477,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                                   aria-label={`Editar ${service.serviceName}`}
                                   title="Editar serviço"
                                 >
-                                  ✎
+                                  ✎ Editar serviço
                                 </button>
                               </div>
                             </div>
@@ -519,30 +505,18 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
             </thead>
             <tbody>
               {filteredClients.map((client) => {
-                const isExpanded = expandedClients.has(client.id)
+                const isExpanded = expandedClientId === client.id
                 const docFormatted = client.cnpj ? `CNPJ: ${client.cnpj}` : client.cpf ? `CPF: ${client.cpf}` : 'Sem documento'
                 return (
                   <Fragment key={client.id}>
                     <tr
                       className={`is-clickable ${isExpanded ? 'is-expanded' : ''}`}
-                      onClick={() => {
-                        setExpandedClients((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(client.id)) next.delete(client.id)
-                          else next.add(client.id)
-                          return next
-                        })
-                      }}
+                      onClick={() => setExpandedClientId((current) => current === client.id ? null : client.id)}
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          setExpandedClients((prev) => {
-                            const next = new Set(prev)
-                            if (next.has(client.id)) next.delete(client.id)
-                            else next.add(client.id)
-                            return next
-                          })
+                          setExpandedClientId((current) => current === client.id ? null : client.id)
                         }
                       }}
                       role="button"
@@ -558,14 +532,12 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                           {client.active ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
-                      </td>
+                      <td style={{ textAlign: 'right' }}></td>
                     </tr>
                     {isExpanded && (
                       <tr className="management-details-row">
                         <td colSpan={4}>
-                          <div className="management-details-container">
+                          <div className="management-details-container" onClick={(e) => e.stopPropagation()}>
                             <div className="management-details-grid">
                               <div className="management-details-full">
                                 <span>Razão Social</span>
@@ -586,7 +558,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                               {clientEditRoles.includes(role) && (
                                 <div className="management-details-actions">
                                   <button
-                                    className="management-edit"
+                                    className="management-edit-btn"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       setClientForm(client)
@@ -597,7 +569,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                                     aria-label={`Editar ${client.tradeName}`}
                                     title="Editar cliente"
                                   >
-                                    ✎
+                                    ✎ Editar cliente
                                   </button>
                                 </div>
                               )}
