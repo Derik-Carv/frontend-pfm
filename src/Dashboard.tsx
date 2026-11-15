@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { apiRequest } from './services/api'
 import AdminPanel from './AdminPanel'
 import ManagementPanel from './Management'
@@ -52,7 +52,7 @@ type DashboardProps = {
   onLogout: () => void
 }
 
-const palette = ['#2D9373', '#D97706', '#1B6951']
+const palette = ['#309b79', '#e77c0a', '#1e5e49', '#3b82f6', '#8b5cf6', '#ec4899']
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function tokenRole(token: string): Role {
@@ -106,7 +106,13 @@ function findMatches(services: Service[], type: FinderType, value: string) {
   })
 }
 
-function PieChart({ services }: { services: Service[] }) {
+function PieChart({
+  services,
+  selectedServiceId,
+}: {
+  services: Service[]
+  selectedServiceId?: string | null
+}) {
   const amounts = services.map((service) => Math.max(0, priceNumber(service.price)))
   const total = amounts.reduce((sum, amount) => sum + amount, 0)
   let cursor = 0
@@ -123,7 +129,10 @@ function PieChart({ services }: { services: Service[] }) {
       role="img"
       style={{ background: total ? `conic-gradient(${segments.join(', ')})` : 'conic-gradient(#d9ded5 0deg 360deg)' }}
     >
-      <span><strong>{services.length}</strong><small>serviços</small></span>
+      <span>
+        <strong>{services.length}</strong>
+        <small>{selectedServiceId ? 'filtrado' : 'serviços'}</small>
+      </span>
     </div>
   )
 }
@@ -131,31 +140,41 @@ function PieChart({ services }: { services: Service[] }) {
 function ServiceBars({
   services,
   dateMode = false,
+  selectedId = null,
   onOpen,
 }: {
   services: Service[]
   dateMode?: boolean
+  selectedId?: string | null
   onOpen: (service: Service) => void
 }) {
   const maxPrice = Math.max(...services.map((service) => priceNumber(service.price)), 1)
 
   return (
-    <div className="dashboard-bars" aria-label="Gráfico de valores dos serviços">
+    <div className="dashboard-bars" aria-label="Gráfico analítico de valores">
       {services.map((service, index) => {
-        const height = Math.max((priceNumber(service.price) / maxPrice) * 100, 4)
+        const height = Math.max((priceNumber(service.price) / maxPrice) * 100, 6)
         const labelDate = dateMode ? formatDate(service.initialDate) : service.serviceName
+        const isSelected = selectedId === service.id
         return (
           <button
             aria-label={`${service.serviceName}, ${formatPrice(service.price)}, início ${formatDate(service.initialDate)}`}
-            className="dashboard-bar-item"
+            className={`dashboard-bar-item ${isSelected ? 'is-selected' : ''}`}
             key={serviceKey(service)}
             onClick={() => onOpen(service)}
-            title={`${service.serviceName} · ${formatPrice(service.price)} · ${formatDate(service.initialDate)}`}
+            title={`${service.serviceName} · ${formatPrice(service.price)} · ${formatDate(service.initialDate)} (Clique para detalhar)`}
             type="button"
           >
             <span className="dashboard-bar-value">{formatPrice(service.price)}</span>
             <span className="dashboard-bar-track">
-              <span className="dashboard-bar-fill" style={{ '--bar-height': `${height}%` } as CSSProperties} />
+              <span
+                className="dashboard-bar-fill"
+                style={{
+                  '--bar-height': `${height}%`,
+                  opacity: selectedId && !isSelected ? 0.35 : 1,
+                  boxShadow: isSelected ? '0 0 10px var(--lime)' : 'none',
+                } as CSSProperties}
+              />
             </span>
             <span className="dashboard-bar-date">{labelDate}</span>
             <span className="dashboard-bar-name">{dateMode ? service.serviceName : `0${index + 1}`}</span>
@@ -183,6 +202,17 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
   const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'admin'>('overview')
+
+  // BI Interactivity States
+  const [selectedKpiFilter, setSelectedKpiFilter] = useState<'all' | 'finished' | 'pending' | null>(null)
+  const [filterClient, setFilterClient] = useState('')
+  const [filterMinPrice, setFilterMinPrice] = useState('')
+  const [filterMaxPrice, setFilterMaxPrice] = useState('')
+  const [filterStartDate, setFilterStartDate] = useState('')
+  const [filterEndDate, setFilterEndDate] = useState('')
+  const [crossSelectedServiceId, setCrossSelectedServiceId] = useState<string | null>(null)
+  const [expandedChart, setExpandedChart] = useState<'top3' | 'recent' | 'oldest' | null>(null)
+
   const canAccessNf = role === 'administrator' || role === 'manager' || role === 'finance'
   const canAccessAdmin = role === 'administrator'
 
@@ -202,7 +232,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           onLogout()
           return
         }
-        setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar o painel.')
+        setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar o painel analítico.')
       } finally {
         if (active) setIsOverviewLoading(false)
       }
@@ -252,25 +282,116 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
     return () => { active = false }
   }, [collaboratorView, currentPage, onLogout, pageSize, refreshing, token])
 
-  const overviewServices = overview
+  const overviewServices = useMemo(() => overview
     ? uniqueServices(overview.highValueServices, overview.recentServices, overview.oldestServices)
-    : []
-  const clientNames = new Map(overviewServices.map((service) => [service.clientId, service.clientName]))
+    : [], [overview])
+
+  const clientNames = useMemo(() => new Map(overviewServices.map((service) => [service.clientId, service.clientName])), [overviewServices])
   const sourceServices = collaboratorView ? overviewServices : services
-  const filteredServices = sourceServices.filter((service) => {
-    const query = search.trim().toLocaleLowerCase('pt-BR')
-    if (!query) return true
-    const client = clientNames.get(service.clientId) || service.clientName || service.clientId
-    return [service.serviceName, client, String(service.price), service.initialDate, service.finishDate || '']
-      .some((value) => value.toLocaleLowerCase('pt-BR').includes(query))
-  })
+
+  // Distinct clients list for filtering
+  const availableClients = useMemo(() => {
+    const map = new Map<string, string>()
+    sourceServices.forEach((s) => {
+      const name = clientNames.get(s.clientId) || s.clientName || s.clientId
+      map.set(s.clientId, name)
+    })
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+  }, [clientNames, sourceServices])
+
+  // BI Cross Filtering Logic
+  const biFilteredServices = useMemo(() => {
+    return sourceServices.filter((service) => {
+      // 1. KPI Filter (finalized vs open)
+      if (selectedKpiFilter === 'finished' && !service.finishDate) return false
+      if (selectedKpiFilter === 'pending' && service.finishDate) return false
+
+      // 2. Client filter
+      if (filterClient && service.clientId !== filterClient) return false
+
+      // 3. Price range
+      const price = priceNumber(service.price)
+      if (filterMinPrice && price < Number(filterMinPrice)) return false
+      if (filterMaxPrice && price > Number(filterMaxPrice)) return false
+
+      // 4. Date range
+      if (filterStartDate && service.initialDate < filterStartDate) return false
+      if (filterEndDate && service.initialDate > filterEndDate) return false
+
+      // 5. Cross-selected item from chart
+      if (crossSelectedServiceId && service.id !== crossSelectedServiceId) return false
+
+      // 6. Search query
+      const query = search.trim().toLocaleLowerCase('pt-BR')
+      if (query) {
+        const client = clientNames.get(service.clientId) || service.clientName || service.clientId
+        const matches = [service.serviceName, client, String(service.price), service.initialDate, service.finishDate || '']
+          .some((val) => val.toLocaleLowerCase('pt-BR').includes(query))
+        if (!matches) return false
+      }
+
+      return true
+    })
+  }, [
+    sourceServices,
+    selectedKpiFilter,
+    filterClient,
+    filterMinPrice,
+    filterMaxPrice,
+    filterStartDate,
+    filterEndDate,
+    crossSelectedServiceId,
+    search,
+    clientNames,
+  ])
+
+  // BI Calculated Metrics (Real Data Only)
+  const kpiTotalValue = useMemo(() => {
+    return biFilteredServices.reduce((acc, curr) => acc + priceNumber(curr.price), 0)
+  }, [biFilteredServices])
+
+  const kpiCount = biFilteredServices.length
+
+  const kpiFinishedCount = useMemo(() => {
+    return biFilteredServices.filter((s) => Boolean(s.finishDate)).length
+  }, [biFilteredServices])
+
+  const kpiPendingCount = kpiCount - kpiFinishedCount
+
+  const kpiAverageTicket = useMemo(() => {
+    return kpiCount > 0 ? kpiTotalValue / kpiCount : 0
+  }, [kpiCount, kpiTotalValue])
+
+  function resetAllFilters() {
+    setSelectedKpiFilter(null)
+    setFilterClient('')
+    setFilterMinPrice('')
+    setFilterMaxPrice('')
+    setFilterStartDate('')
+    setFilterEndDate('')
+    setCrossSelectedServiceId(null)
+    setSearch('')
+    setCurrentPage(1)
+  }
+
+  const hasActiveFilters = Boolean(
+    selectedKpiFilter ||
+    filterClient ||
+    filterMinPrice ||
+    filterMaxPrice ||
+    filterStartDate ||
+    filterEndDate ||
+    crossSelectedServiceId ||
+    search
+  )
+
   const totalPages = collaboratorView
-    ? Math.max(1, Math.ceil(filteredServices.length / pageSize))
+    ? Math.max(1, Math.ceil(biFilteredServices.length / pageSize))
     : Math.max(1, pagination.totalPages)
   const activePage = collaboratorView ? Math.min(currentPage, totalPages) : pagination.page
   const pageServices = collaboratorView
-    ? filteredServices.slice((activePage - 1) * pageSize, activePage * pageSize)
-    : filteredServices
+    ? biFilteredServices.slice((activePage - 1) * pageSize, activePage * pageSize)
+    : biFilteredServices
   const firstVisibleItem = pageServices.length ? (activePage - 1) * pageSize + 1 : 0
   const lastVisibleItem = firstVisibleItem ? firstVisibleItem + pageServices.length - 1 : 0
 
@@ -300,8 +421,13 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
     }
   }
 
-  function openService(service: Service) {
-    void openDetails('id', service.id, service.serviceName)
+  function handleBarSelect(service: Service) {
+    if (crossSelectedServiceId === service.id) {
+      setCrossSelectedServiceId(null) // desmarca
+    } else {
+      setCrossSelectedServiceId(service.id) // filtro cruzado
+      void openDetails('id', service.id, service.serviceName)
+    }
   }
 
   const highValues = overview?.highValueServices ?? []
@@ -313,10 +439,10 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
       <header className="dashboard-topbar">
         <a className="dashboard-wordmark" href="#inicio" aria-label="Derik Flash, painel inicial">
           <span className="dashboard-monogram" aria-hidden="true">D</span>
-          <span>Derik Flash <i>/</i> <strong>Financeiro</strong></span>
+          <span>Derik Flash <i>/</i> <strong>Analytics BI</strong></span>
         </a>
         <nav className="dashboard-section-nav" aria-label="Navegação principal">
-          <button aria-current={activeArea === 'overview' ? 'page' : undefined} onClick={() => setActiveArea('overview')} type="button">Visão geral</button>
+          <button aria-current={activeArea === 'overview' ? 'page' : undefined} onClick={() => setActiveArea('overview')} type="button">Dashboard (BI)</button>
           <button aria-current={activeArea === 'services' ? 'page' : undefined} onClick={() => setActiveArea('services')} type="button">Serviços</button>
           <button aria-current={activeArea === 'clients' ? 'page' : undefined} onClick={() => setActiveArea('clients')} type="button">Clientes</button>
           {canAccessNf && <button aria-current={activeArea === 'nf' ? 'page' : undefined} onClick={() => setActiveArea('nf')} type="button">Notas fiscais</button>}
@@ -335,12 +461,12 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         {activeArea === 'overview' ? <>
         <section className="dashboard-heading">
           <div>
-            <p className="dashboard-eyebrow">PAINEL DE SERVIÇOS <span>·</span> {role || 'ACESSO'}</p>
-            <h1>Visão geral</h1>
-            <p className="dashboard-description">Acompanhe valores, períodos e serviços vinculados ao seu acesso.</p>
+            <p className="dashboard-eyebrow">BUSINESS INTELLIGENCE <span>·</span> {role.toUpperCase() || 'ACESSO'}</p>
+            <h1>Painel Analítico de Serviços</h1>
+            <p className="dashboard-description">Visualização, exploração de dados, cruzamento de métricas e drill-down em tempo real.</p>
           </div>
           <button className="dashboard-refresh" disabled={isLoading || isOverviewLoading} onClick={() => setRefreshing((value) => value + 1)} type="button">
-            <span aria-hidden="true">↻</span> Atualizar
+            <span aria-hidden="true">↻</span> Sincronizar dados
           </button>
         </section>
 
@@ -351,23 +477,232 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           </div>
         )}
 
-        <section className="dashboard-overview" aria-label="Indicadores principais de serviços">
+        {/* 1.5 Filtros Globais Analíticos */}
+        <section className="bi-toolbar" aria-label="Filtros analíticos interativos">
+          <div className="bi-filters-row">
+            <div className="bi-filter-group">
+              <span>Cliente:</span>
+              <select
+                className="bi-filter-select"
+                value={filterClient}
+                onChange={(e) => { setFilterClient(e.target.value); setCurrentPage(1) }}
+              >
+                <option value="">Todos os clientes ({availableClients.length})</option>
+                {availableClients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bi-filter-group">
+              <span>Valor min:</span>
+              <input
+                className="bi-filter-input"
+                type="number"
+                placeholder="R$ 0,00"
+                value={filterMinPrice}
+                onChange={(e) => { setFilterMinPrice(e.target.value); setCurrentPage(1) }}
+                style={{ width: '100px' }}
+              />
+            </div>
+
+            <div className="bi-filter-group">
+              <span>Valor max:</span>
+              <input
+                className="bi-filter-input"
+                type="number"
+                placeholder="R$ 999.999"
+                value={filterMaxPrice}
+                onChange={(e) => { setFilterMaxPrice(e.target.value); setCurrentPage(1) }}
+                style={{ width: '100px' }}
+              />
+            </div>
+
+            <div className="bi-filter-group">
+              <span>De:</span>
+              <input
+                className="bi-filter-input"
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => { setFilterStartDate(e.target.value); setCurrentPage(1) }}
+              />
+            </div>
+
+            <div className="bi-filter-group">
+              <span>Até:</span>
+              <input
+                className="bi-filter-input"
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => { setFilterEndDate(e.target.value); setCurrentPage(1) }}
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <button className="bi-clear-filters-btn" onClick={resetAllFilters} type="button">
+                ✕ Limpar todos os filtros
+              </button>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <div className="bi-active-badges">
+              <span>Filtros aplicados:</span>
+              {selectedKpiFilter && (
+                <span className="bi-badge">
+                  Status: {selectedKpiFilter === 'finished' ? 'Finalizados' : 'Em aberto'}
+                  <button onClick={() => setSelectedKpiFilter(null)}>×</button>
+                </span>
+              )}
+              {filterClient && (
+                <span className="bi-badge">
+                  Cliente: {availableClients.find((c) => c.id === filterClient)?.name || filterClient}
+                  <button onClick={() => setFilterClient('')}>×</button>
+                </span>
+              )}
+              {filterMinPrice && (
+                <span className="bi-badge">
+                  Min: R$ {filterMinPrice}
+                  <button onClick={() => setFilterMinPrice('')}>×</button>
+                </span>
+              )}
+              {filterMaxPrice && (
+                <span className="bi-badge">
+                  Max: R$ {filterMaxPrice}
+                  <button onClick={() => setFilterMaxPrice('')}>×</button>
+                </span>
+              )}
+              {filterStartDate && (
+                <span className="bi-badge">
+                  Início ≥ {formatDate(filterStartDate)}
+                  <button onClick={() => setFilterStartDate('')}>×</button>
+                </span>
+              )}
+              {filterEndDate && (
+                <span className="bi-badge">
+                  Início ≤ {formatDate(filterEndDate)}
+                  <button onClick={() => setFilterEndDate('')}>×</button>
+                </span>
+              )}
+              {crossSelectedServiceId && (
+                <span className="bi-badge">
+                  Serviço cruzado: {sourceServices.find((s) => s.id === crossSelectedServiceId)?.serviceName}
+                  <button onClick={() => setCrossSelectedServiceId(null)}>×</button>
+                </span>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* 1.2 Indicadores Financeiros Resumidos (KPIs Interativos) */}
+        <section className="bi-kpi-grid" aria-label="Indicadores executivos">
+          <div
+            className={`bi-kpi-card ${selectedKpiFilter === 'all' ? 'is-active' : ''}`}
+            onClick={() => setSelectedKpiFilter((prev) => prev === 'all' ? null : 'all')}
+            role="button"
+            tabIndex={0}
+            title="Clique para alternar filtro geral"
+          >
+            <div className="bi-kpi-header">
+              <span className="bi-kpi-title">Valor Total</span>
+              <span className="bi-kpi-icon">💰</span>
+            </div>
+            <p className="bi-kpi-value">{formatPrice(kpiTotalValue)}</p>
+            <span className="bi-kpi-meta">{kpiCount} registros no escopo</span>
+          </div>
+
+          <div
+            className="bi-kpi-card"
+            onClick={() => void openDetails('price', '', 'Todos os Serviços')}
+            role="button"
+            tabIndex={0}
+            title="Clique para detalhar a média dos serviços"
+          >
+            <div className="bi-kpi-header">
+              <span className="bi-kpi-title">Ticket Médio</span>
+              <span className="bi-kpi-icon">📈</span>
+            </div>
+            <p className="bi-kpi-value">{formatPrice(kpiAverageTicket)}</p>
+            <span className="bi-kpi-meta">Média aritmética por serviço</span>
+          </div>
+
+          <div
+            className={`bi-kpi-card ${selectedKpiFilter === 'finished' ? 'is-active' : ''}`}
+            onClick={() => setSelectedKpiFilter((prev) => prev === 'finished' ? null : 'finished')}
+            role="button"
+            tabIndex={0}
+            title="Clique para filtrar apenas serviços finalizados"
+          >
+            <div className="bi-kpi-header">
+              <span className="bi-kpi-title">Serviços Concluídos</span>
+              <span className="bi-kpi-icon">✅</span>
+            </div>
+            <p className="bi-kpi-value">{kpiFinishedCount}</p>
+            <span className="bi-kpi-meta">{kpiCount ? `${Math.round((kpiFinishedCount / kpiCount) * 100)}% de conclusão` : '0%'}</span>
+          </div>
+
+          <div
+            className={`bi-kpi-card ${selectedKpiFilter === 'pending' ? 'is-active' : ''}`}
+            onClick={() => setSelectedKpiFilter((prev) => prev === 'pending' ? null : 'pending')}
+            role="button"
+            tabIndex={0}
+            title="Clique para filtrar apenas serviços em andamento"
+          >
+            <div className="bi-kpi-header">
+              <span className="bi-kpi-title">Em Andamento / Pendente</span>
+              <span className="bi-kpi-icon">⏳</span>
+            </div>
+            <p className="bi-kpi-value">{kpiPendingCount}</p>
+            <span className="bi-kpi-meta">{kpiCount ? `${Math.round((kpiPendingCount / kpiCount) * 100)}% em aberto` : '0%'}</span>
+          </div>
+        </section>
+
+        {/* 1.3 Gráficos Analíticos com Expansão e Filtros Cruzados */}
+        <section className="dashboard-overview" aria-label="Gráficos analíticos">
           <article className="dashboard-card dashboard-value-card">
             <header className="dashboard-card-heading">
-              <div><p className="dashboard-card-index">01 / VALOR</p><h2>Top 3 valores</h2></div>
-              <span className="dashboard-card-tag">MAIORES</span>
+              <div>
+                <p className="dashboard-card-index">01 / CONCENTRAÇÃO</p>
+                <h2>Top 3 Maiores Valores</h2>
+              </div>
+              <button
+                className="bi-expand-btn"
+                onClick={() => setExpandedChart('top3')}
+                title="Expandir gráfico"
+                type="button"
+              >
+                ⤢
+              </button>
             </header>
             {isOverviewLoading ? <div className="dashboard-skeleton" aria-label="Carregando valores" /> : (
               <div className="dashboard-value-content">
-                <PieChart services={highValues} />
+                <PieChart
+                  selectedServiceId={crossSelectedServiceId}
+                  services={highValues}
+                />
                 <div className="dashboard-legend">
-                  {highValues.map((service, index) => (
-                    <button className="dashboard-legend-row" key={service.id} onClick={() => openService(service)} type="button">
-                      <span className="dashboard-legend-dot" style={{ background: palette[index % palette.length] }} />
-                      <span className="dashboard-legend-info"><strong>{service.serviceName}</strong><small>{formatPrice(service.price)}</small></span>
-                      <span aria-hidden="true" className="dashboard-legend-arrow">↗</span>
-                    </button>
-                  ))}
+                  {highValues.map((service, index) => {
+                    const isSelected = crossSelectedServiceId === service.id
+                    return (
+                      <button
+                        className={`dashboard-legend-row ${isSelected ? 'is-selected' : ''}`}
+                        key={service.id}
+                        onClick={() => handleBarSelect(service)}
+                        style={{ background: isSelected ? 'rgb(48 155 121 / 20%)' : undefined }}
+                        type="button"
+                        title="Clique para cruzar informações com este serviço"
+                      >
+                        <span className="dashboard-legend-dot" style={{ background: palette[index % palette.length] }} />
+                        <span className="dashboard-legend-info">
+                          <strong>{service.serviceName}</strong>
+                          <small>{formatPrice(service.price)}</small>
+                        </span>
+                        <span aria-hidden="true" className="dashboard-legend-arrow">
+                          {isSelected ? '✓' : '↗'}
+                        </span>
+                      </button>
+                    )
+                  })}
                   {!highValues.length && <p className="dashboard-empty">Nenhum serviço encontrado.</p>}
                 </div>
               </div>
@@ -376,67 +711,236 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
 
           <article className="dashboard-card">
             <header className="dashboard-card-heading">
-              <div><p className="dashboard-card-index">02 / CADASTRO</p><h2>Datas recentes</h2></div>
-              <span className="dashboard-card-tag">TOP 3</span>
+              <div>
+                <p className="dashboard-card-index">02 / CADASTRO</p>
+                <h2>Datas Recentes</h2>
+              </div>
+              <button
+                className="bi-expand-btn"
+                onClick={() => setExpandedChart('recent')}
+                title="Expandir gráfico"
+                type="button"
+              >
+                ⤢
+              </button>
             </header>
-            {isOverviewLoading ? <div className="dashboard-skeleton" aria-label="Carregando datas recentes" /> : recent.length
-              ? <ServiceBars dateMode services={recent} onOpen={openService} />
-              : <p className="dashboard-empty">Nenhum serviço encontrado.</p>}
-            <p className="dashboard-chart-note">Ordenação do backend por cadastro; rótulos mostram a data inicial.</p>
+            {isOverviewLoading ? <div className="dashboard-skeleton" aria-label="Carregando datas recentes" /> : recent.length ? (
+              <ServiceBars
+                dateMode
+                onOpen={handleBarSelect}
+                selectedId={crossSelectedServiceId}
+                services={recent}
+              />
+            ) : <p className="dashboard-empty">Nenhum serviço encontrado.</p>}
+            <p className="dashboard-chart-note">Clique em uma barra para aplicar filtro cruzado nos demais componentes.</p>
           </article>
 
           <article className="dashboard-card">
             <header className="dashboard-card-heading">
-              <div><p className="dashboard-card-index">03 / HISTÓRICO</p><h2>Datas antigas</h2></div>
-              <span className="dashboard-card-tag">TOP 3</span>
+              <div>
+                <p className="dashboard-card-index">03 / HISTÓRICO</p>
+                <h2>Datas Antigas</h2>
+              </div>
+              <button
+                className="bi-expand-btn"
+                onClick={() => setExpandedChart('oldest')}
+                title="Expandir gráfico"
+                type="button"
+              >
+                ⤢
+              </button>
             </header>
-            {isOverviewLoading ? <div className="dashboard-skeleton" aria-label="Carregando datas antigas" /> : oldest.length
-              ? <ServiceBars dateMode services={oldest} onOpen={openService} />
-              : <p className="dashboard-empty">Nenhum serviço encontrado.</p>}
-            <p className="dashboard-chart-note">Ordenação do backend por cadastro; rótulos mostram a data inicial.</p>
+            {isOverviewLoading ? <div className="dashboard-skeleton" aria-label="Carregando datas antigas" /> : oldest.length ? (
+              <ServiceBars
+                dateMode
+                onOpen={handleBarSelect}
+                selectedId={crossSelectedServiceId}
+                services={oldest}
+              />
+            ) : <p className="dashboard-empty">Nenhum serviço encontrado.</p>}
+            <p className="dashboard-chart-note">Clique em uma barra para aplicar filtro cruzado nos demais componentes.</p>
           </article>
         </section>
 
+        {/* Modal de Gráfico Expandido (1.4 Componentes Expansíveis) */}
+        {expandedChart && (
+          <div
+            className="bi-chart-expanded-backdrop"
+            onClick={(e) => { if (e.target === e.currentTarget) setExpandedChart(null) }}
+            role="presentation"
+          >
+            <div className="bi-chart-expanded-modal" role="dialog" aria-modal="true">
+              <div className="bi-chart-expanded-header">
+                <h2>
+                  {expandedChart === 'top3' && 'Detalhamento: Top 3 Maiores Valores'}
+                  {expandedChart === 'recent' && 'Detalhamento: Serviços com Datas Recentes'}
+                  {expandedChart === 'oldest' && 'Detalhamento: Serviços com Datas Antigas'}
+                </h2>
+                <button
+                  className="dashboard-close"
+                  onClick={() => setExpandedChart(null)}
+                  type="button"
+                  aria-label="Fechar gráfico expandido"
+                >
+                  ×
+                </button>
+              </div>
+              <div style={{ minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {expandedChart === 'top3' && (
+                  <div style={{ width: '100%', maxWidth: '600px' }}>
+                    <PieChart services={highValues} />
+                    <div className="dashboard-legend" style={{ marginTop: '20px' }}>
+                      {highValues.map((s, idx) => (
+                        <div key={s.id} className="dashboard-legend-row">
+                          <span className="dashboard-legend-dot" style={{ background: palette[idx % palette.length] }} />
+                          <span className="dashboard-legend-info">
+                            <strong>{s.serviceName}</strong>
+                            <small>{formatPrice(s.price)} · Início: {formatDate(s.initialDate)}</small>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {expandedChart === 'recent' && (
+                  <div style={{ width: '100%' }}>
+                    <ServiceBars dateMode onOpen={handleBarSelect} services={recent} />
+                  </div>
+                )}
+                {expandedChart === 'oldest' && (
+                  <div style={{ width: '100%' }}>
+                    <ServiceBars dateMode onOpen={handleBarSelect} services={oldest} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 1.6 Tabela Analítica (Somente Leitura e Exploração de BI) */}
         <section className="dashboard-registers" aria-labelledby="registers-title">
           <div className="dashboard-register-heading">
-            <div><p className="dashboard-card-index">REGISTROS NO BANCO</p><h2 id="registers-title">Serviços</h2></div>
-            <label className="dashboard-search"><span aria-hidden="true">⌕</span><input aria-label="Buscar serviço, cliente, valor ou data nesta página" onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Buscar nesta página" type="search" value={search} /></label>
+            <div>
+              <p className="dashboard-card-index">EXPLORAÇÃO DE DADOS</p>
+              <h2 id="registers-title">Registros Analíticos de Serviços</h2>
+            </div>
+            <label className="dashboard-search">
+              <span aria-hidden="true">⌕</span>
+              <input
+                aria-label="Buscar serviço, cliente, valor ou data no escopo analítico"
+                onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }}
+                placeholder="Filtrar nesta visualização..."
+                type="search"
+                value={search}
+              />
+            </label>
           </div>
 
-          {collaboratorView && <p className="dashboard-scope-note">Exibindo apenas os serviços retornados pelo resumo autorizado para este perfil.</p>}
+          {collaboratorView && <p className="dashboard-scope-note">Exibindo apenas os serviços autorizados para o seu perfil.</p>}
 
-          <div className="dashboard-table-scroll" role="region" aria-label="Tabela de serviços" tabIndex={0}>
+          <div className="dashboard-table-scroll" role="region" aria-label="Tabela analítica de serviços" tabIndex={0}>
             <table className="dashboard-table">
-              <thead><tr><th scope="col">Serviço</th><th scope="col">Cliente</th><th scope="col">Valor</th><th scope="col">Data inicial</th><th scope="col">Data final</th></tr></thead>
+              <thead>
+                <tr>
+                  <th scope="col" style={{ width: '35%' }}>Serviço</th>
+                  <th scope="col" style={{ width: '30%' }}>Cliente</th>
+                  <th scope="col" style={{ width: '15%' }}>Valor</th>
+                  <th scope="col" style={{ width: '10%' }}>Data Inicial</th>
+                  <th scope="col" style={{ width: '10%' }}>Data Final</th>
+                </tr>
+              </thead>
               <tbody>
                 {pageServices.map((service) => {
                   const client = clientNames.get(service.clientId) || service.clientName || `Cliente ${service.clientId.slice(0, 8)}`
+                  const isCrossSelected = crossSelectedServiceId === service.id
                   return (
-                    <tr key={service.id}>
-                      <td><button className="dashboard-cell-button dashboard-service-cell" onClick={() => openService(service)} type="button"><strong>{service.serviceName}</strong><small>{service.statusName || service.id.slice(0, 8)}</small></button></td>
-                      <td><button aria-label={`Ver serviços do cliente ${client}`} className="dashboard-cell-button" onClick={() => void openDetails('client', service.clientId, client)} type="button" title="Ver serviços deste cliente">{client}</button></td>
-                      <td><button aria-label={`Ver serviços com valor ${formatPrice(service.price)}`} className="dashboard-cell-button dashboard-price-cell" onClick={() => void openDetails('price', String(service.price), formatPrice(service.price))} type="button" title="Ver serviços com este valor">{formatPrice(service.price)}</button></td>
-                      <td><button aria-label={`Ver serviços com data inicial ${formatDate(service.initialDate)}`} className="dashboard-cell-button" onClick={() => void openDetails('initialdate', service.initialDate, formatDate(service.initialDate))} type="button" title="Ver serviços desta data inicial">{formatDate(service.initialDate)}</button></td>
-                      <td><button aria-label={service.finishDate ? `Ver serviços com data final ${formatDate(service.finishDate)}` : 'Serviço sem data final'} className="dashboard-cell-button" disabled={!service.finishDate} onClick={() => service.finishDate && void openDetails('finishdate', service.finishDate, formatDate(service.finishDate))} type="button" title={service.finishDate ? 'Ver serviços desta data final' : 'Sem data final cadastrada'}>{formatDate(service.finishDate)}</button></td>
+                    <tr
+                      key={service.id}
+                      className={isCrossSelected ? 'is-selected' : ''}
+                      style={{ background: isCrossSelected ? 'rgb(48 155 121 / 15%)' : undefined }}
+                    >
+                      <td>
+                        <button
+                          className="dashboard-cell-button dashboard-service-cell"
+                          onClick={() => handleBarSelect(service)}
+                          type="button"
+                          title="Clique para aprofundar a análise (Drill-down)"
+                        >
+                          <strong>{service.serviceName}</strong>
+                          <small>{service.statusName || (service.finishDate ? 'Concluído' : 'Em andamento')}</small>
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          aria-label={`Explorar serviços do cliente ${client}`}
+                          className="dashboard-cell-button"
+                          onClick={() => void openDetails('client', service.clientId, `Cliente: ${client}`)}
+                          type="button"
+                          title="Filtrar por este cliente"
+                        >
+                          {client}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          aria-label={`Filtrar serviços com valor ${formatPrice(service.price)}`}
+                          className="dashboard-cell-button dashboard-price-cell"
+                          onClick={() => void openDetails('price', String(service.price), `Faixa de Valor: ${formatPrice(service.price)}`)}
+                          type="button"
+                          title="Explorar serviços neste valor"
+                        >
+                          {formatPrice(service.price)}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          aria-label={`Filtrar por data inicial ${formatDate(service.initialDate)}`}
+                          className="dashboard-cell-button"
+                          onClick={() => void openDetails('initialdate', service.initialDate, `Data de Início: ${formatDate(service.initialDate)}`)}
+                          type="button"
+                        >
+                          {formatDate(service.initialDate)}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          aria-label={service.finishDate ? `Filtrar por data final ${formatDate(service.finishDate)}` : 'Sem data final'}
+                          className="dashboard-cell-button"
+                          disabled={!service.finishDate}
+                          onClick={() => service.finishDate && void openDetails('finishdate', service.finishDate, `Conclusão: ${formatDate(service.finishDate)}`)}
+                          type="button"
+                        >
+                          {formatDate(service.finishDate)}
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
-                {!isLoading && !filteredServices.length && <tr><td className="dashboard-table-empty" colSpan={5}>{search ? 'Nenhum serviço corresponde à busca.' : 'Nenhum serviço disponível para este perfil.'}</td></tr>}
+                {!isLoading && !pageServices.length && (
+                  <tr>
+                    <td className="dashboard-table-empty" colSpan={5}>
+                      {hasActiveFilters ? 'Nenhum serviço corresponde aos filtros analíticos selecionados.' : 'Nenhum serviço disponível.'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
+
           <div className="dashboard-pagination">
             <div className="dashboard-pagination-summary" aria-live="polite">
-              <span>{isLoading ? 'Carregando serviços...' : search
-                ? `${pageServices.length} encontrados nesta página · ${collaboratorView ? filteredServices.length : pagination.total} no total`
-                : `${firstVisibleItem}–${lastVisibleItem} de ${collaboratorView ? filteredServices.length : pagination.total}`}</span>
+              <span>
+                {isLoading ? 'Carregando registros...' : (
+                  `${firstVisibleItem}–${lastVisibleItem} de ${biFilteredServices.length} analisados`
+                )}
+              </span>
               <label htmlFor="dashboard-page-size">Itens por página</label>
               <select
                 id="dashboard-page-size"
                 onChange={(event) => { setPageSize(Number(event.target.value)); setCurrentPage(1) }}
                 value={pageSize}
               >
-                {[5, 10].map((size) => <option key={size} value={size}>{size}</option>)}
+                {[5, 10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
               </select>
             </div>
             <nav className="dashboard-page-controls" aria-label="Paginação da lista de serviços">
@@ -447,32 +951,61 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
               <button aria-label="Última página" disabled={activePage >= totalPages || isLoading} onClick={() => setCurrentPage(totalPages)} type="button">»</button>
             </nav>
           </div>
-          <div className="dashboard-table-footer"><span>{role || 'Acesso limitado'} · Dados conforme permissões da API</span></div>
+          <div className="dashboard-table-footer">
+            <span>Visualização analítica de BI · Painel de somente-leitura</span>
+          </div>
         </section>
 
+        {/* 2. Detalhamento Financeiro Aprofundado (Drill-Through / Drill-Down) */}
         {detail && (
           <section className="dashboard-details" aria-live="polite" aria-labelledby="details-title">
             <div className="dashboard-details-heading">
-              <div><p className="dashboard-card-index">DETALHES · {detail.type.toUpperCase()}</p><h2 id="details-title">{detail.title}</h2></div>
+              <div>
+                <p className="dashboard-card-index">A PROFUNDAMENTO ANALÍTICO · {detail.type.toUpperCase()}</p>
+                <h2 id="details-title">{detail.title}</h2>
+              </div>
               <button aria-label="Fechar detalhes" className="dashboard-close" onClick={() => setDetail(null)} type="button">×</button>
             </div>
-            {detailLoading && <p className="dashboard-detail-status">Consultando detalhes na API...</p>}
+            {detailLoading && <p className="dashboard-detail-status">Carregando registros da API...</p>}
             {detailError && <p className="dashboard-detail-error" role="status">{detailError}</p>}
             {detail.services.length ? (
               <>
-                <div className="dashboard-detail-summary"><strong>{detail.services.length}</strong><span>{detail.services.length === 1 ? 'serviço relacionado' : 'serviços relacionados'}</span></div>
-                <div className="dashboard-detail-chart"><h3>Valores dos serviços</h3><ServiceBars services={detail.services} onOpen={(service) => void openDetails('id', service.id, service.serviceName)} /></div>
+                <div className="dashboard-detail-summary">
+                  <strong>{detail.services.length}</strong>
+                  <span>{detail.services.length === 1 ? 'registro encontrado' : 'registros consolidados'}</span>
+                </div>
+                {detail.services.length > 1 && (
+                  <div className="dashboard-detail-chart">
+                    <h3>Comparativo de Valores</h3>
+                    <ServiceBars
+                      onOpen={(service) => void openDetails('id', service.id, service.serviceName)}
+                      services={detail.services}
+                    />
+                  </div>
+                )}
                 <div className="dashboard-detail-list">
                   {detail.services.map((service) => (
                     <article className="dashboard-detail-record" key={service.id}>
-                      <header><div><h3>{service.serviceName}</h3><p>{clientNames.get(service.clientId) || service.clientName || `Cliente ${service.clientId.slice(0, 8)}`}</p></div><strong>{formatPrice(service.price)}</strong></header>
-                      <dl><div><dt>Data inicial</dt><dd>{formatDate(service.initialDate)}</dd></div><div><dt>Data final</dt><dd>{formatDate(service.finishDate)}</dd></div><div><dt>Status</dt><dd>{service.statusName || 'Não informado'}</dd></div></dl>
-                      <p className="dashboard-detail-description">{service.details}</p>
+                      <header>
+                        <div>
+                          <h3>{service.serviceName}</h3>
+                          <p>{clientNames.get(service.clientId) || service.clientName || `Cliente ${service.clientId.slice(0, 8)}`}</p>
+                        </div>
+                        <strong>{formatPrice(service.price)}</strong>
+                      </header>
+                      <dl>
+                        <div><dt>Data Inicial</dt><dd>{formatDate(service.initialDate)}</dd></div>
+                        <div><dt>Data Final</dt><dd>{formatDate(service.finishDate)}</dd></div>
+                        <div><dt>Status</dt><dd>{service.statusName || (service.finishDate ? 'Concluído' : 'Em andamento')}</dd></div>
+                      </dl>
+                      <div className="dashboard-detail-description" style={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
+                        {service.details || 'Sem descrição cadastrada para este serviço.'}
+                      </div>
                     </article>
                   ))}
                 </div>
               </>
-            ) : !detailLoading && <p className="dashboard-detail-status">Nenhum serviço correspondente foi encontrado.</p>}
+            ) : !detailLoading && <p className="dashboard-detail-status">Nenhum serviço correspondente encontrado para este filtro.</p>}
           </section>
         )}
         </> : activeArea === 'nf' ? (
@@ -490,7 +1023,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           />
         )}
 
-        <footer className="dashboard-footer"><span>DERIK FLASH</span><span>VISÃO GERAL DE SERVIÇOS</span></footer>
+        <footer className="dashboard-footer"><span>DERIK FLASH</span><span>BUSINESS INTELLIGENCE & ANALYTICS</span></footer>
       </div>
     </main>
   )

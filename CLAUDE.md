@@ -13,15 +13,19 @@ O **frontend-pfm** é a interface web do Sistema Financeiro e Operacional PFM, p
    - Login por `username` e `password`.
    - Registro de usuários (CPF, nome, sobrenome, usuário e senha).
    - Fluxo de obrigatoriedade de alteração de senha inicial ou redefinida (`passwordChangeRequired`).
-2. **Dashboard de Serviços**:
-   - Visualização geral de serviços (mais caros, recentes e antigos).
-   - Busca/filtros dinâmicos por ID, cliente, valor, data inicial e final.
-   - Detalhamento de métricas e status de serviços em andamento ou finalizados.
-3. **Gestão Operacional (Management)**:
+2. **Dashboard de Serviços (BI & Analytics)**:
+   - Painel analítico de Business Intelligence inspirado em Power BI / TOTVS Analytics.
+   - Exclusivo para visualização, exploração e análise interativa dos dados disponibilizados pela API.
+   - **Somente leitura**: não permite cadastrar, editar ou excluir serviços no Dashboard (essas ações pertencem exclusivamente à aba "Serviços" / Gestão Operacional).
+   - Barra de filtros analíticos reativos (cliente, faixa de valores mín/máx, período de emissão).
+   - Cards de KPIs interativos (Valor Total, Ticket Médio, Serviços Concluídos, Pendentes) que atuam como filtros rápidos ao serem clicados.
+   - Gráficos nativos com filtros cruzados (cross-filtering) e visualização expandida em tela cheia (drill-down).
+   - Tabela analítica somente-leitura com paginação e drill-through de aprofundamento.
+3. **Gestão Operacional (Management / Serviços / Clientes)**:
    - Cadastros e manutenção de Clientes (PJ/PF, contatos, endereços).
-   - Movimentações financeiras (receitas/despesas/entradas vinculadas a serviços).
-   - Status de serviços.
+   - Movimentações financeiras e cadastro/edição/exclusão de Serviços.
    - Padrão Master-Detail: Tabelas de listagem (Clientes e Serviços) compactas com 4 colunas principais e clique na linha inteira (`is-clickable`) com setas indicadoras (`table-chevron`) para expandir/recolher dados complementares com empilhamento vertical responsivo em telas menores.
+   - Fechamento automático (acordeão único - single expand) para evitar sobreposição ou excesso de rolagem.
 4. **Notas Fiscais (NfPanel)**:
    - Emissão manual ou importação automatizada via leitura de PDF.
    - Vinculação com Cliente, Movimentação e Serviço.

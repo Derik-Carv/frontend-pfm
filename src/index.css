@@ -12,8 +12,8 @@
   --font-heading: 'Manrope', 'DM Sans', sans-serif;
   --panel-text: #f4fbf7;
   --paper: #f4fbf7;
-  --lime: #2d9373;
-  --clay: #d97706;
+  --lime: #309b79;
+  --clay: #e77c0a;
   --ink: #0f2f24;
   --muted: #617c70;
   --heading: var(--forest);
@@ -28,18 +28,20 @@
 
 :root[data-theme='dark'] {
   color: #e5f3ec;
-  background: #0d1e18;
+  background: #10251f;
 
-  --paper: #0d1e18;
-  --heading: #e8f5ef;
+  --paper: #10251f;
+  --heading: #eef7f3;
   --label: #bcd8cb;
   --ink: #e5f3ec;
-  --muted: #8caea0;
-  --field-bg: #132d24;
-  --field-border: #1e4537;
-  --message-bg: #15382c;
+  --muted: #86a799;
+  --field-bg: #19382e;
+  --field-border: #234c3e;
+  --message-bg: #1c4035;
   --message-text: #e0f2e9;
-  --footnote: #8caea0;
+  --footnote: #86a799;
+  --lime: #309b79;
+  --clay: #e77c0a;
   color-scheme: dark;
 }
 
