@@ -15,8 +15,21 @@
 .management-loading,
 .management-empty { padding: 45px 15px; color: var(--muted); font-size: 13px; text-align: center; }
 .management-table-scroll { margin-top: 17px; }
-.management-table-scroll .dashboard-table { min-width: 760px; }
-.management-table-scroll .dashboard-table td { padding-block: 8px; }
+.management-table-scroll .dashboard-table { width: 100%; min-width: 0; table-layout: fixed; }
+.management-table-scroll .dashboard-table td { padding-block: 10px; }
+.management-table-scroll .dashboard-table tr.is-clickable { cursor: pointer; transition: background 150ms ease; }
+.management-table-scroll .dashboard-table tr.is-clickable:hover { background: rgb(45 147 115 / 12%); }
+.management-table-scroll .dashboard-table tr.is-expanded > td { border-bottom-color: transparent; }
+.management-details-row > td { padding: 0 !important; background: var(--field-bg); }
+.management-details-container { padding: 14px 16px; border-top: 1px solid var(--field-border); border-bottom: 1px solid var(--field-border); }
+.management-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+.management-details-grid > div { min-width: 0; }
+.management-details-grid span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.management-details-grid strong { display: block; overflow: hidden; color: var(--ink); font-size: 12px; line-height: 1.4; word-break: break-word; }
+.management-details-full { grid-column: 1 / -1; }
+.management-details-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; grid-column: 1 / -1; margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--field-border); }
+.table-chevron { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: 8px; font-size: 11px; color: var(--muted); transition: transform 200ms ease; vertical-align: middle; }
+.table-chevron.is-open { transform: rotate(90deg); color: var(--clay); }
 .management-detail-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .management-edit { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border: 1px solid var(--field-border); border-radius: 3px; color: #1b6951; background: var(--field-bg); font-size: 17px; cursor: pointer; }
 .management-edit:hover { border-color: #2d9373; color: #fff; background: #2d9373; }
@@ -41,6 +54,12 @@
 .management-hint { margin: 13px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .management-form-actions { display: flex; justify-content: end; gap: 9px; margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--field-border); }
 .management-view button:focus-visible { outline: 2px solid var(--clay); outline-offset: 3px; }
+
+@media (max-width: 600px) {
+  .management-details-grid { grid-template-columns: 1fr; }
+  .management-details-actions { justify-content: stretch; }
+  .management-details-actions button { width: 100%; }
+}
 
 @media (max-width: 720px) {
   .management-heading { align-items: stretch; flex-direction: column; }

@@ -666,20 +666,44 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
       <div className="nf-list-heading"><div><p className="dashboard-card-index">REGISTROS FISCAIS</p><h3>Notas {filters.status === 'active' ? 'ativas' : filters.status === 'inactive' ? 'inativas' : 'canceladas'}</h3></div><button className="nf-refresh" disabled={isLoading} onClick={() => setRefreshKey((key) => key + 1)} type="button" title="Atualizar lista">Atualizar</button></div>
       <div className="dashboard-table-scroll nf-table-scroll" role="region" aria-label="Lista de notas fiscais" tabIndex={0}>
         <table className="dashboard-table nf-table">
-          <thead><tr><th scope="col">Nota</th><th scope="col">Cliente</th><th scope="col">Valor</th><th scope="col">Ação</th></tr></thead>
+          <thead>
+            <tr>
+              <th scope="col">Nota</th>
+              <th scope="col">Cliente</th>
+              <th scope="col">Valor</th>
+              <th scope="col" style={{ textAlign: 'right' }}></th>
+            </tr>
+          </thead>
           <tbody>
             {notes.map((note) => {
               const isExpanded = expandedNotes.has(note.id)
               const clientName = clientNames.get(note.thirdPartyClientId) || `Cliente ${note.thirdPartyClientId.slice(0, 8)}`
               return <Fragment key={note.id}>
-              <tr className={isExpanded ? 'is-expanded' : undefined}>
-              <td><strong className="nf-cell-truncate" title={`Nota ${note.numberNf || 'sem número'}`}>{note.numberNf || 'Sem número'}</strong></td>
+              <tr
+                className={`is-clickable ${isExpanded ? 'is-expanded' : ''}`}
+                onClick={() => toggleNoteDetails(note.id)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    toggleNoteDetails(note.id)
+                  }
+                }}
+              >
+              <td>
+                <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`}>▶</span>
+                <strong className="nf-cell-truncate" title={`Nota ${note.numberNf || 'sem número'}`}>{note.numberNf || 'Sem número'}</strong>
+              </td>
               <td><span className="nf-cell-truncate" title={clientName}>{clientName}</span></td>
               <td className="nf-money">{displayMoney(note.totalValue)}</td>
-              <td><button className="nf-expand-button" aria-expanded={isExpanded} onClick={() => toggleNoteDetails(note.id)} type="button">{isExpanded ? 'Ocultar' : 'Ver mais'}</button></td>
+              <td style={{ textAlign: 'right' }}>
+                <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
+              </td>
             </tr>
             {isExpanded && <tr className="nf-details-row"><td colSpan={4}>
-              <div className="nf-details-container">
+              <div className="nf-details-container" onClick={(e) => e.stopPropagation()}>
                 <div className="nf-details-grid">
                   <div><span>Data de Emissão</span><strong>{displayDate(note.emissionDate)}</strong></div>
                   <div><span>Situação</span><strong><span className={`management-status ${note.active ? 'is-active' : 'is-inactive'}`}>{note.active ? 'Ativa' : note.cancelDate ? 'Cancelada' : 'Inativa'}</span></strong></div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { apiRequest } from './services/api'
 import './Management.css'
 
@@ -95,6 +95,8 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
   const [notice, setNotice] = useState('')
   const [serviceForm, setServiceForm] = useState<'create' | Service | null>(null)
   const [clientForm, setClientForm] = useState<'create' | Client | null>(null)
+  const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set())
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set())
   const [reloadCount, setReloadCount] = useState(0)
 
   const canManageServices = serviceRoles.includes(role)
@@ -404,30 +406,210 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
       {isLoading ? <div className="management-loading" aria-live="polite">Carregando {view === 'services' ? 'serviços' : 'clientes'}...</div> : view === 'services' && canManageServices ? (
         <div className="dashboard-table-scroll management-table-scroll" role="region" aria-label="Lista de serviços" tabIndex={0}>
           <table className="dashboard-table">
-            <thead><tr><th scope="col">Serviço</th><th scope="col">Cliente</th><th scope="col">Valor</th><th scope="col">Data inicial</th><th scope="col">Data final</th><th scope="col">Detalhes</th><th scope="col">Ações</th></tr></thead>
+            <thead>
+              <tr>
+                <th scope="col" style={{ width: '38%' }}>Serviço</th>
+                <th scope="col" style={{ width: '32%' }}>Cliente</th>
+                <th scope="col" style={{ width: '20%' }}>Valor</th>
+                <th scope="col" style={{ width: '10%', textAlign: 'right' }}></th>
+              </tr>
+            </thead>
             <tbody>
-              {filteredServices.map((service) => <tr key={service.id}>
-                <td><strong>{service.serviceName}</strong></td>
-                <td>{clients.find((client) => client.id === service.clientId)?.tradeName ?? service.clientName ?? 'Cliente'}</td>
-                <td>{formatMoney(service.price)}</td>
-                <td>{formatDate(service.initialDate)}</td>
-                <td>{formatDate(service.finishDate)}</td>
-                <td className="management-detail-cell">{service.details}</td>
-                <td><button className="management-edit" onClick={() => { setServiceForm(service); setError(''); setNotice('') }} type="button" aria-label={`Editar ${service.serviceName}`} title="Editar serviço">✎</button></td>
-              </tr>)}
-              {!filteredServices.length && <tr><td className="dashboard-table-empty" colSpan={7}>{search ? 'Nenhum serviço corresponde à busca.' : 'Nenhum serviço disponível.'}</td></tr>}
+              {filteredServices.map((service) => {
+                const isExpanded = expandedServices.has(service.id)
+                const clientName = clients.find((client) => client.id === service.clientId)?.tradeName ?? service.clientName ?? 'Cliente'
+                return (
+                  <Fragment key={service.id}>
+                    <tr
+                      className={`is-clickable ${isExpanded ? 'is-expanded' : ''}`}
+                      onClick={() => {
+                        setExpandedServices((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(service.id)) next.delete(service.id)
+                          else next.add(service.id)
+                          return next
+                        })
+                      }}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setExpandedServices((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(service.id)) next.delete(service.id)
+                            else next.add(service.id)
+                            return next
+                          })
+                        }
+                      }}
+                      role="button"
+                      aria-expanded={isExpanded}
+                    >
+                      <td>
+                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`}>▶</span>
+                        <strong>{service.serviceName}</strong>
+                      </td>
+                      <td>{clientName}</td>
+                      <td><span className="dashboard-price-cell">{formatMoney(service.price)}</span></td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="management-details-row">
+                        <td colSpan={4}>
+                          <div className="management-details-container">
+                            <div className="management-details-grid">
+                              <div>
+                                <span>Data Inicial</span>
+                                <strong>{formatDate(service.initialDate)}</strong>
+                              </div>
+                              <div>
+                                <span>Data Final</span>
+                                <strong>{formatDate(service.finishDate)}</strong>
+                              </div>
+                              {service.statusName && (
+                                <div>
+                                  <span>Status</span>
+                                  <strong>{service.statusName}</strong>
+                                </div>
+                              )}
+                              <div className="management-details-full">
+                                <span>Detalhes do Serviço</span>
+                                <strong>{service.details || 'Sem detalhes cadastrados.'}</strong>
+                              </div>
+                              <div className="management-details-actions">
+                                <button
+                                  className="management-edit"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setServiceForm(service)
+                                    setError('')
+                                    setNotice('')
+                                  }}
+                                  type="button"
+                                  aria-label={`Editar ${service.serviceName}`}
+                                  title="Editar serviço"
+                                >
+                                  ✎
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
+              {!filteredServices.length && <tr><td className="dashboard-table-empty" colSpan={4}>{search ? 'Nenhum serviço corresponde à busca.' : 'Nenhum serviço disponível.'}</td></tr>}
             </tbody>
           </table>
         </div>
       ) : !isLoading && view === 'clients' && canViewClients ? (
         <div className="dashboard-table-scroll management-table-scroll" role="region" aria-label="Lista de clientes" tabIndex={0}>
           <table className="dashboard-table">
-            <thead><tr><th scope="col">Nome fantasia</th><th scope="col">Razão social</th><th scope="col">CPF</th><th scope="col">CNPJ</th><th scope="col">Situação</th>{clientEditRoles.includes(role) && <th scope="col">Ações</th>}</tr></thead>
+            <thead>
+              <tr>
+                <th scope="col" style={{ width: '40%' }}>Nome fantasia</th>
+                <th scope="col" style={{ width: '35%' }}>Documento</th>
+                <th scope="col" style={{ width: '15%' }}>Situação</th>
+                <th scope="col" style={{ width: '10%', textAlign: 'right' }}></th>
+              </tr>
+            </thead>
             <tbody>
-              {filteredClients.map((client) => <tr key={client.id}>
-                <td><strong>{client.tradeName}</strong></td><td>{client.registeredCompanyName}</td><td>{client.cpf || '—'}</td><td>{client.cnpj || '—'}</td><td><span className={`management-status ${client.active ? 'is-active' : 'is-inactive'}`}>{client.active ? 'Ativo' : 'Inativo'}</span></td>{clientEditRoles.includes(role) && <td><button className="management-edit" onClick={() => { setClientForm(client); setError(''); setNotice('') }} type="button" aria-label={`Editar ${client.tradeName}`} title="Editar cliente">✎</button></td>}
-              </tr>)}
-              {!filteredClients.length && <tr><td className="dashboard-table-empty" colSpan={clientEditRoles.includes(role) ? 6 : 5}>{search ? 'Nenhum cliente corresponde à busca nesta página.' : 'Nenhum cliente cadastrado.'}</td></tr>}
+              {filteredClients.map((client) => {
+                const isExpanded = expandedClients.has(client.id)
+                const docFormatted = client.cnpj ? `CNPJ: ${client.cnpj}` : client.cpf ? `CPF: ${client.cpf}` : 'Sem documento'
+                return (
+                  <Fragment key={client.id}>
+                    <tr
+                      className={`is-clickable ${isExpanded ? 'is-expanded' : ''}`}
+                      onClick={() => {
+                        setExpandedClients((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(client.id)) next.delete(client.id)
+                          else next.add(client.id)
+                          return next
+                        })
+                      }}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setExpandedClients((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(client.id)) next.delete(client.id)
+                            else next.add(client.id)
+                            return next
+                          })
+                        }
+                      }}
+                      role="button"
+                      aria-expanded={isExpanded}
+                    >
+                      <td>
+                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`}>▶</span>
+                        <strong>{client.tradeName}</strong>
+                      </td>
+                      <td>{docFormatted}</td>
+                      <td>
+                        <span className={`management-status ${client.active ? 'is-active' : 'is-inactive'}`}>
+                          {client.active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <span className={`table-chevron ${isExpanded ? 'is-open' : ''}`} style={{ margin: 0 }}>▼</span>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="management-details-row">
+                        <td colSpan={4}>
+                          <div className="management-details-container">
+                            <div className="management-details-grid">
+                              <div className="management-details-full">
+                                <span>Razão Social</span>
+                                <strong>{client.registeredCompanyName || 'Não informada'}</strong>
+                              </div>
+                              <div>
+                                <span>CPF</span>
+                                <strong>{client.cpf || '—'}</strong>
+                              </div>
+                              <div>
+                                <span>CNPJ</span>
+                                <strong>{client.cnpj || '—'}</strong>
+                              </div>
+                              <div>
+                                <span>Situação Cadastral</span>
+                                <strong>{client.active ? 'Ativo' : 'Inativo'}</strong>
+                              </div>
+                              {clientEditRoles.includes(role) && (
+                                <div className="management-details-actions">
+                                  <button
+                                    className="management-edit"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setClientForm(client)
+                                      setError('')
+                                      setNotice('')
+                                    }}
+                                    type="button"
+                                    aria-label={`Editar ${client.tradeName}`}
+                                    title="Editar cliente"
+                                  >
+                                    ✎
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
+              {!filteredClients.length && <tr><td className="dashboard-table-empty" colSpan={4}>{search ? 'Nenhum cliente corresponde à busca nesta página.' : 'Nenhum cliente cadastrado.'}</td></tr>}
             </tbody>
           </table>
         </div>

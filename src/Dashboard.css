@@ -256,7 +256,7 @@
   .dashboard-pie::before { inset: 15px; }
   .dashboard-register-heading { align-items: stretch; flex-direction: column; }
   .dashboard-search { width: 100%; }
-  .dashboard-table { min-width: 710px; }
+  .dashboard-table { width: 100%; min-width: 0; }
   .dashboard-pagination { align-items: stretch; flex-direction: column; gap: 10px; }
   .dashboard-pagination-summary { justify-content: space-between; }
   .dashboard-page-controls { justify-content: end; }
