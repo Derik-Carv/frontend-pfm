@@ -3,6 +3,7 @@ import { apiRequest } from './services/api'
 import AdminPanel from './AdminPanel'
 import ManagementPanel from './Management'
 import NfPanel from './NfPanel'
+import { CompanySelector } from './CompanySelector'
 import './Dashboard.css'
 
 type Role = 'administrator' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
@@ -449,6 +450,12 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           {canAccessAdmin && <button aria-current={activeArea === 'admin' ? 'page' : undefined} onClick={() => setActiveArea('admin')} type="button">Administração</button>}
         </nav>
         <div className="dashboard-tools">
+          <CompanySelector
+            onLogout={onLogout}
+            onTenantChanged={() => setRefreshing((val) => val + 1)}
+            role={role}
+            token={token}
+          />
           <div className="dashboard-theme-control" role="group" aria-label="Tema da tela">
             <button aria-pressed={theme === 'light'} onClick={() => onThemeChange('light')} type="button">Claro</button>
             <button aria-pressed={theme === 'dark'} onClick={() => onThemeChange('dark')} type="button">Escuro</button>
@@ -1009,12 +1016,12 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           </section>
         )}
         </> : activeArea === 'nf' ? (
-          <NfPanel onLogout={onLogout} role={role} token={token} />
+          <NfPanel key={`nf-${token}-${refreshing}`} onLogout={onLogout} role={role} token={token} />
         ) : activeArea === 'admin' ? (
           <AdminPanel onLogout={onLogout} token={token} />
         ) : (
           <ManagementPanel
-            key={`${activeArea}-${token}`}
+            key={`${activeArea}-${token}-${refreshing}`}
             onDataChanged={() => setRefreshing((value) => value + 1)}
             onLogout={onLogout}
             role={role}

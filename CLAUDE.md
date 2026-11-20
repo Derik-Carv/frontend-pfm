@@ -37,6 +37,11 @@ O **frontend-pfm** é a interface web do Sistema Financeiro e Operacional PFM, p
 5. **Administração de Usuários (AdminPanel)**:
    - Listagem e criação de usuários com perfis de acesso (RBAC).
    - Reset de senha administrativa e alternância de status ativo/inativo.
+6. **Multi-Tenant Hierárquico (Mother & Filiais)**:
+   - Usuários pertencem a uma Mother (Matriz) ou a uma de suas Filiais.
+   - Seletor de Unidade no topo (`CompanySelector.tsx`) para alternar entre "Todas as Unidades (Visão Consolidada)" e filiais isoladas.
+   - Headers automáticos em todas as requisições autenticadas: `x-company-id` e `x-view-scope` ("single" | "consolidated").
+   - Cadastro de filiais para gestores/administradores da Matriz via `POST /companies/branches`.
 
 ### Perfis de Acesso (RBAC):
 Os perfis são extraídos do payload JWT (`tokenRole`):

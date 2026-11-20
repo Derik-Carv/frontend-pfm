@@ -1,5 +1,27 @@
 export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3336').replace(/\/$/, '')
 
+// Chaves de persistência no localStorage para Multi-Tenant Hierárquico
+export const STORAGE_COMPANY_KEY = 'pfm_selected_company_id'
+export const STORAGE_VIEW_SCOPE_KEY = 'pfm_view_scope' // 'single' | 'consolidated'
+
+export function getSelectedCompanyId(): string | null {
+  return localStorage.getItem(STORAGE_COMPANY_KEY)
+}
+
+export function getViewScope(): 'single' | 'consolidated' {
+  return (localStorage.getItem(STORAGE_VIEW_SCOPE_KEY) as 'single' | 'consolidated') || 'single'
+}
+
+export function setTenantContext(companyId: string, scope: 'single' | 'consolidated') {
+  if (companyId) {
+    localStorage.setItem(STORAGE_COMPANY_KEY, companyId)
+  } else {
+    localStorage.removeItem(STORAGE_COMPANY_KEY)
+  }
+  localStorage.setItem(STORAGE_VIEW_SCOPE_KEY, scope)
+  window.dispatchEvent(new CustomEvent('pfm_tenant_change', { detail: { companyId, scope } }))
+}
+
 export class ApiRequestError extends Error {
   readonly status: number
   readonly responseBody: unknown
@@ -26,6 +48,17 @@ export async function apiRequest<T>(
     } else if (options.body != null && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
+
+    // Injeção automática dos headers de contexto Multi-Tenant
+    const companyId = getSelectedCompanyId()
+    const viewScope = getViewScope()
+    if (companyId && !headers.has('x-company-id')) {
+      headers.set('x-company-id', companyId)
+    }
+    if (!headers.has('x-view-scope')) {
+      headers.set('x-view-scope', viewScope)
+    }
+
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers,
@@ -48,8 +81,16 @@ export async function apiRequest<T>(
 }
 
 export async function apiFileRequest(path: string, token: string) {
+  const headers = new Headers({ Authorization: `Bearer ${token}` })
+  const companyId = getSelectedCompanyId()
+  const viewScope = getViewScope()
+  if (companyId) {
+    headers.set('x-company-id', companyId)
+  }
+  headers.set('x-view-scope', viewScope)
+
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
   })
   if (!response.ok) {
     const data = await response.json().catch(() => null)
