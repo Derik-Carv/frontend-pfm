@@ -49,14 +49,17 @@ export async function apiRequest<T>(
       headers.set('Content-Type', 'application/json')
     }
 
-    // Injeção automática dos headers de contexto Multi-Tenant
-    const companyId = getSelectedCompanyId()
-    const viewScope = getViewScope()
-    if (companyId && !headers.has('x-company-id')) {
-      headers.set('x-company-id', companyId)
-    }
-    if (!headers.has('x-view-scope')) {
-      headers.set('x-view-scope', viewScope)
+    // Injeção automática dos headers de contexto Multi-Tenant apenas em rotas autenticadas (não públicas)
+    const isPublic = path.startsWith('/public')
+    if (!isPublic) {
+      const companyId = getSelectedCompanyId()
+      const viewScope = getViewScope()
+      if (companyId && !headers.has('x-company-id')) {
+        headers.set('x-company-id', companyId)
+      }
+      if (!headers.has('x-view-scope')) {
+        headers.set('x-view-scope', viewScope)
+      }
     }
 
     response = await fetch(`${API_URL}${path}`, {
