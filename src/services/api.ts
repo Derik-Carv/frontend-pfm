@@ -49,9 +49,10 @@ export async function apiRequest<T>(
       headers.set('Content-Type', 'application/json')
     }
 
-    // Injeção automática dos headers de contexto Multi-Tenant apenas em rotas autenticadas (não públicas)
-    const isPublic = path.startsWith('/public')
-    if (!isPublic) {
+    // Injeção automática dos headers de contexto Multi-Tenant apenas em rotas admin
+    // (rotas públicas e rotas normais não aceitam esses headers no CORS do backend)
+    const isAdminRoute = path.startsWith('/admin')
+    if (isAdminRoute) {
       const companyId = getSelectedCompanyId()
       const viewScope = getViewScope()
       if (companyId && !headers.has('x-company-id')) {
@@ -85,12 +86,15 @@ export async function apiRequest<T>(
 
 export async function apiFileRequest(path: string, token: string) {
   const headers = new Headers({ Authorization: `Bearer ${token}` })
-  const companyId = getSelectedCompanyId()
-  const viewScope = getViewScope()
-  if (companyId) {
-    headers.set('x-company-id', companyId)
+  // Headers multi-tenant apenas em rotas admin (backend CORS não permite em outras rotas)
+  if (path.startsWith('/admin')) {
+    const companyId = getSelectedCompanyId()
+    const viewScope = getViewScope()
+    if (companyId) {
+      headers.set('x-company-id', companyId)
+    }
+    headers.set('x-view-scope', viewScope)
   }
-  headers.set('x-view-scope', viewScope)
 
   const response = await fetch(`${API_URL}${path}`, {
     headers,

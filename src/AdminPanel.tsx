@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { apiRequest } from './services/api'
+import { PlatformAdminDashboard } from './PlatformAdmin'
 import './AdminPanel.css'
 
 type AdminTable = 'roles' | 'users' | 'clients' | 'movimentations' | 'types' | 'status-services' | 'services' | 'notes' | 'bundled'
@@ -142,6 +143,7 @@ function initialForm(table: AdminTable, record?: Record<string, unknown>): Recor
 }
 
 function AdminPanel({ token, onLogout }: AdminPanelProps) {
+  const [adminTab, setAdminTab] = useState<'platform' | 'database'>('platform')
   const [table, setTable] = useState<AdminTable>('types')
   const [records, setRecords] = useState<Array<Record<string, unknown>>>([])
   const [pagination, setPagination] = useState(emptyPagination)
@@ -285,6 +287,10 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
     }
   }
 
+  if (adminTab === 'platform') {
+    return <PlatformAdminDashboard token={token} onLogout={onLogout} />
+  }
+
   return (
     <section className="admin-view" aria-labelledby="admin-title">
       <header className="admin-heading">
@@ -293,7 +299,10 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
           <h2 id="admin-title">Painel administrativo</h2>
           <p>Cadastre e edite informações sem precisar montar JSON.</p>
         </div>
-        <button className="management-primary" onClick={openCreate} type="button">+ Novo registro</button>
+        <div className="admin-tab-actions">
+          <button className="management-secondary" onClick={() => setAdminTab('platform')} type="button">← Central da Plataforma</button>
+          <button className="management-primary" onClick={openCreate} type="button">+ Novo registro</button>
+        </div>
       </header>
 
       <div className="admin-toolbar">

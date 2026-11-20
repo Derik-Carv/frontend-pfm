@@ -1,0 +1,401 @@
+.platform-admin-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: dashboard-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.platform-admin-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--field-border);
+}
+
+.platform-admin-header h2 {
+  margin: 0;
+  color: var(--heading);
+  font: 700 clamp(24px, 3vw, 32px)/1.15 var(--font-heading);
+}
+
+.platform-admin-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 1. Cards de Métricas e Telemetria */
+.platform-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.platform-metric-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border: 1px solid var(--field-border);
+  border-radius: 12px;
+  background: var(--field-bg);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme='dark'] .platform-metric-card {
+  background: linear-gradient(135deg, rgb(6 78 59 / 30%) 0%, rgb(6 78 59 / 10%) 100%), #0d2720;
+  border-color: rgb(16 185 129 / 20%);
+}
+
+.platform-metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.platform-metric-title {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+:root[data-theme='dark'] .platform-metric-title {
+  color: rgb(110 231 183 / 80%);
+}
+
+.platform-metric-icon {
+  font-size: 16px;
+}
+
+.platform-metric-value {
+  margin: 0;
+  color: var(--heading);
+  font: 800 26px/1.15 var(--font-heading);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+
+:root[data-theme='dark'] .platform-metric-value {
+  color: #f8fafc;
+}
+
+.platform-metric-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+:root[data-theme='dark'] .platform-metric-meta {
+  color: #94a3b8;
+}
+
+.platform-metric-meta strong {
+  color: var(--ink);
+}
+
+/* 2. Árvore em Cascata */
+.platform-cascade-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--field-border);
+  border-radius: 12px;
+  background: var(--field-bg);
+}
+
+:root[data-theme='dark'] .platform-cascade-section {
+  background: #0d2720;
+  border-color: rgb(16 185 129 / 18%);
+}
+
+.platform-cascade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--field-border);
+}
+
+.platform-cascade-header h3 {
+  margin: 0;
+  color: var(--heading);
+  font: 700 20px/1.2 var(--font-heading);
+}
+
+.platform-cascade-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.platform-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.platform-mother-card {
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--paper);
+  overflow: hidden;
+  transition: all 180ms ease;
+}
+
+:root[data-theme='dark'] .platform-mother-card {
+  background: #12352b;
+  border-color: rgb(16 185 129 / 16%);
+}
+
+.platform-mother-card.is-expanded {
+  border-color: #10b981;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 25%);
+}
+
+.platform-mother-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 140ms ease;
+}
+
+.platform-mother-row:hover {
+  background: rgb(16 185 129 / 8%);
+}
+
+.platform-mother-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.platform-mother-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgb(16 185 129 / 20%);
+  color: #10b981;
+  border: 1px solid rgb(16 185 129 / 35%);
+}
+
+.platform-mother-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.platform-mother-names strong {
+  color: var(--heading);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.platform-mother-names small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.platform-mother-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.platform-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.platform-stat-pill strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.platform-view-clients-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgb(16 185 129 / 30%);
+  border-radius: 6px;
+  color: #10b981;
+  background: rgb(16 185 129 / 10%);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+  white-space: nowrap;
+}
+
+.platform-view-clients-btn:hover {
+  background: #10b981;
+  color: #fff;
+  border-color: #10b981;
+}
+
+/* Filiais em Cascata */
+.platform-branches-container {
+  padding: 12px 20px 16px 40px;
+  border-top: 1px solid var(--field-border);
+  background: rgb(0 0 0 / 12%);
+  animation: dashboard-expand-enter 200ms ease;
+}
+
+.platform-no-branches {
+  padding: 14px 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.platform-branches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-branch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+}
+
+:root[data-theme='dark'] .platform-branch-row {
+  background: #0d2720;
+  border-color: rgb(16 185 129 / 14%);
+}
+
+.platform-branch-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.platform-branch-arrow {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.platform-branch-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgb(59 130 246 / 15%);
+  color: #60a5fa;
+  border: 1px solid rgb(59 130 246 / 30%);
+}
+
+.platform-branch-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.platform-branch-names strong {
+  color: var(--heading);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.platform-branch-names small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.platform-branch-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Modal de Clientes da Empresa */
+.platform-clients-modal {
+  width: min(840px, 100%);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-clients-table-scroll {
+  overflow-y: auto;
+  max-height: 55vh;
+  margin-top: 14px;
+}
+
+@media (max-width: 1100px) {
+  .platform-metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .platform-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .platform-mother-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .platform-mother-stats {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .platform-branch-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .platform-branch-stats {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .platform-branches-container {
+    padding-left: 14px;
+  }
+}
