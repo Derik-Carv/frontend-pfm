@@ -705,10 +705,43 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
                     <span>Arquivo PDF</span>
                     <strong className={`nf-file-status ${note.hasFile ? 'is-attached' : 'is-missing'}`}>{note.hasFile ? `Anexado${note.pathFile ? ` · ${note.pathFile.split('/').pop()}` : ''}` : 'Sem anexo'}</strong>
                     <div className="nf-file-actions">
-                      {note.hasFile && <button type="button" onClick={() => void openNfFile(note, false)}>Ver</button>}
-                      {note.hasFile && <button type="button" onClick={() => void openNfFile(note, true)}>Baixar</button>}
-                      {note.hasFile && <button className="nf-send-email-btn" disabled={sendingEmailNoteId === note.id} type="button" onClick={() => openEmailModal(note)}>{sendingEmailNoteId === note.id ? 'Enviando...' : '✉ Enviar por e-mail'}</button>}
-                      {role !== 'observer' && <label className="nf-file-repair">Anexar PDF<input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" /></label>}
+                      {note.hasFile && (
+                        <button type="button" onClick={() => void openNfFile(note, false)} title="Visualizar PDF">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                          Ver
+                        </button>
+                      )}
+                      {note.hasFile && (
+                        <button type="button" onClick={() => void openNfFile(note, true)} title="Baixar PDF">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          Baixar
+                        </button>
+                      )}
+                      {note.hasFile && (
+                        <button className="nf-send-email-btn" disabled={sendingEmailNoteId === note.id} type="button" onClick={() => openEmailModal(note)} title="Enviar por e-mail">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect width="20" height="16" x="2" y="4" rx="2" />
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                          </svg>
+                          {sendingEmailNoteId === note.id ? 'Enviando...' : 'Enviar por e-mail'}
+                        </button>
+                      )}
+                      {role !== 'observer' && (
+                        <label className="nf-file-repair" title="Substituir ou anexar novo PDF">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                          </svg>
+                          Anexar PDF
+                          <input accept="application/pdf,.pdf" onChange={(event) => { void replaceNfFile(note, event.currentTarget.files?.[0] ?? null); event.currentTarget.value = '' }} type="file" />
+                        </label>
+                      )}
                     </div>
                   </div>
                   {note.deactivationReason && <div className="nf-details-full"><span>Motivo da desativação</span><strong>{note.deactivationReason}</strong></div>}

@@ -27,21 +27,24 @@
 }
 
 :root[data-theme='dark'] {
-  color: #e5f3ec;
-  background: #10251f;
+  color: #f1f5f9;
+  background: #0a1f18;
 
-  --paper: #10251f;
-  --heading: #eef7f3;
-  --label: #bcd8cb;
-  --ink: #e5f3ec;
-  --muted: #86a799;
-  --field-bg: #19382e;
-  --field-border: #234c3e;
-  --message-bg: #1c4035;
-  --message-text: #e0f2e9;
-  --footnote: #86a799;
-  --lime: #309b79;
-  --clay: #e77c0a;
+  --paper: #0a1f18;
+  --heading: #f8fafc;
+  --label: #a7f3d0;
+  --ink: #f1f5f9;
+  --muted: #6ee7b7;
+  --field-bg: #0d2720;
+  --field-border: rgb(16 185 129 / 18%);
+  --message-bg: #12352b;
+  --message-text: #ecfdf5;
+  --footnote: #94a3b8;
+  --lime: #10b981;
+  --clay: #f59e0b;
+  --emerald-accent: #10b981;
+  --card-surface: #0d2720;
+  --card-surface-elevated: #12352b;
   color-scheme: dark;
 }
 
