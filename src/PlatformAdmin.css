@@ -26,6 +26,58 @@
   font-size: 13px;
 }
 
+.platform-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.platform-toggle-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--field-border);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.platform-toggle-btn.is-active {
+  background: rgb(16 185 129 / 16%);
+  border-color: rgb(16 185 129 / 35%);
+  color: #10b981;
+}
+
+.platform-toggle-btn.is-inactive {
+  background: rgb(239 68 68 / 15%);
+  border-color: rgb(239 68 68 / 35%);
+  color: #ef4444;
+}
+
+.platform-mother-modal {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.platform-form-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.platform-form-divider {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--field-border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
 /* 1. Cards de Métricas e Telemetria */
 .platform-metrics-grid {
   display: grid;

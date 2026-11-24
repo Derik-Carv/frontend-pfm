@@ -288,7 +288,13 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
   }
 
   if (adminTab === 'platform') {
-    return <PlatformAdminDashboard token={token} onLogout={onLogout} />
+    return (
+      <PlatformAdminDashboard
+        token={token}
+        onLogout={onLogout}
+        onOpenDatabase={() => setAdminTab('database')}
+      />
+    )
   }
 
   return (

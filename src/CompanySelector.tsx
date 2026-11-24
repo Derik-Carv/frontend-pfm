@@ -57,8 +57,10 @@ export function CompanySelector({
         if (!active) return
         setData(response)
 
-        // Se ainda não houver empresa selecionada no localStorage, inicializa com a ativa do backend
-        if (!getSelectedCompanyId() && response.activeCompanyId) {
+        // Se ainda não houver empresa selecionada válida no localStorage, inicializa com a ativa do backend
+        const storedCompanyId = getSelectedCompanyId()
+        const isValidSelection = Boolean(storedCompanyId && response.companies.some((c) => c.id === storedCompanyId))
+        if (!isValidSelection && response.activeCompanyId) {
           setTenantContext(response.activeCompanyId, 'single')
           onTenantChanged()
         }
@@ -77,7 +79,7 @@ export function CompanySelector({
 
   const motherCompany = data?.companies.find((c) => !c.motherId) || data?.companies[0]
   const isMotherUser = data?.isMother ?? Boolean(motherCompany && !motherCompany.motherId)
-  const canCreateBranch = ['administrator', 'manager'].includes(role) && isMotherUser
+  const canCreateBranch = role === 'company_admin' && isMotherUser
 
   // Nome exibido no botão do seletor
   let currentLabel = 'Carregando unidades...'
@@ -128,7 +130,7 @@ export function CompanySelector({
 
     try {
       const response = await createBranch(token, motherCompany.id, payload)
-      setModalSuccess(`Filial "${response.branch.tradeName}" cadastrada com sucesso!`)
+      setModalSuccess(`Filial "${response.company.tradeName}" cadastrada com sucesso!`)
       // Recarrega a lista de empresas
       const updated = await getMyCompanies(token)
       setData(updated)

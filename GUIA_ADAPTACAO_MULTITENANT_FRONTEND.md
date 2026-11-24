@@ -144,7 +144,109 @@ Crie um dropdown no cabeçalho (ao lado do nome do usuário / avatar):
 
 ---
 
-## 6. Checklist de Implementação no Front
+## 6. Painel Exclusivo do Administrador Geral da Plataforma (`administrator`)
+
+O perfil **`administrator`** (Platform Admin) **não precisa ver dashboards operacionais de serviços/clientes de uma empresa**, e sim o **Centro de Comando da Plataforma (SaaS Monitoring & Cascade Management)**.
+
+Ao logar como `administrator`:
+- O Frontend pode renderizar diretamente a visão administrativa ou destacar a aba **"Administração da Plataforma"**.
+- O Admin tem acesso a 3 novas rotas exclusivas do backend:
+
+---
+
+### 6.1 Novas Rotas de Gestão Global e Monitoramento
+
+| Endpoint | Método | Descrição |
+|---|---|---|
+| `/admin/system/metrics` | `GET` | Retorna saúde do sistema (status, uptime, uso de memória MB, banco conectado) e estatísticas gerais (total de empresas, matrizes, filiais, usuários, clientes, serviços e média de acessos/dia). |
+| `/admin/system/hierarchy` | `GET` | Retorna a árvore em cascata: **Mother -> Filiais -> Totais de Usuários, Clientes e Serviços de cada uma**. |
+| `/admin/system/clients?companyId=<ID>` | `GET` | Consulta os clientes diretos de uma empresa ou filial específica selecionada na cascata. |
+
+---
+
+### 6.2 Exemplo de Resposta de `/admin/system/metrics`
+
+```json
+{
+  "message": "System metrics retrieved successfully",
+  "data": {
+    "systemHealth": {
+      "status": "healthy",
+      "uptimeSeconds": 1420,
+      "databaseConnection": true,
+      "memoryUsageMb": 181,
+      "environment": "production"
+    },
+    "stats": {
+      "totalCompanies": 12,
+      "totalMothers": 4,
+      "totalBranches": 8,
+      "totalUsers": 54,
+      "totalClients": 420,
+      "totalServices": 5001,
+      "totalNf": 89,
+      "estimatedDailyAccess": 432
+    }
+  }
+}
+```
+
+---
+
+### 6.3 Exemplo de Resposta de `/admin/system/hierarchy` (Visão em Cascata)
+
+```json
+{
+  "message": "Cascade hierarchy retrieved successfully",
+  "mothers": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000001",
+      "registeredCompanyName": "Empresa Matriz Principal LTDA",
+      "tradeName": "Matriz Principal",
+      "cnpj": "00000000000191",
+      "active": true,
+      "branchesCount": 2,
+      "usersCount": 8,
+      "clientsCount": 150,
+      "servicesCount": 3200,
+      "branches": [
+        {
+          "id": "018f1234-0000-7000-8000-000000000002",
+          "tradeName": "Filial SP",
+          "cnpj": "00000000000272",
+          "usersCount": 4,
+          "clientsCount": 80,
+          "servicesCount": 1200
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 6.4 Como Estruturar a Tela no Frontend para o Admin Geral
+
+Em `src/AdminPanel.tsx` (ou em um componente `PlatformAdminDashboard.tsx`):
+
+1. **Card Superior de Saúde do Sistema (Health & Telemetry):**
+   - 🟢 **Status:** Operacional (Healthy)
+   - ⏱️ **Uptime:** Tempo de atividade contínua
+   - 💾 **Memória RAM:** Uso em MB
+   - ⚡ **Acessos Estimados:** Média de acessos diários
+   - 🏢 **Empresas na Plataforma:** Total de Mothers e Filiais
+
+2. **Árvore / Lista em Cascata (Empresas Contratantes):**
+   - Um acordeão/tabela expansível:
+     - 📁 **[Mother] Matriz Principal** — CNPJ: `00.000.000/0001-91` (2 Filiais | 150 Clientes | 3.200 Serviços)
+       - ↳ 🏢 **[Filial] Filial SP** — CNPJ: `00.000.000/0002-72` (80 Clientes) `[Ver Clientes]`
+       - ↳ 🏢 **[Filial] Filial RJ** — CNPJ: `00.000.000/0003-53` (30 Clientes) `[Ver Clientes]`
+   - Ao clicar em `[Ver Clientes]`, dispara `GET /admin/system/clients?companyId=<ID>` e exibe a listagem dos clientes pertencentes àquela filial/matriz.
+
+---
+
+## 7. Checklist de Implementação no Front
 
 - [ ] **Passo 1:** Criar funções auxiliares em `src/services/api.ts` para armazenar `x-company-id` e `x-view-scope`.
 - [ ] **Passo 2:** Atualizar `apiRequest` para enviar os headers automaticamente.

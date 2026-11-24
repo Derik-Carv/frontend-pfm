@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   getSystemMetrics,
   getSystemHierarchy,
@@ -9,11 +9,22 @@ import {
   type HierarchyBranch,
   type AdminClient,
 } from './services/adminSystem'
+import { createMotherCompany, updateMotherCompany } from './services/companies'
 import './PlatformAdmin.css'
 
 type PlatformAdminProps = {
   token: string
   onLogout: () => void
+  onOpenDatabase?: () => void
+}
+
+function slugifyTradeName(name: string): string {
+  return name
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') || 'empresa'
 }
 
 function formatUptime(seconds: number): string {
@@ -29,13 +40,20 @@ function formatUptime(seconds: number): string {
   return `${s}s`
 }
 
-export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) {
+export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: PlatformAdminProps) {
   const [health, setHealth] = useState<SystemHealth | null>(null)
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [mothers, setMothers] = useState<HierarchyMother[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
+
+  // Modal de nova empresa Mother + Admin Cliente
+  const [isCreateMotherOpen, setIsCreateMotherOpen] = useState(false)
+  const [motherTradeName, setMotherTradeName] = useState('')
+  const [isCreatingMother, setIsCreatingMother] = useState(false)
+  const [createMotherError, setCreateMotherError] = useState('')
 
   // Controle de expansão de Matrizes na cascata
   const [expandedMotherIds, setExpandedMotherIds] = useState<Set<string>>(new Set())
@@ -130,6 +148,66 @@ export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) 
     }
   }
 
+  async function handleCreateMother(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsCreatingMother(true)
+    setCreateMotherError('')
+    setNotice('')
+
+    const formData = new FormData(event.currentTarget)
+    const adminName = String(formData.get('adminName') ?? '').trim()
+    const adminSurname = String(formData.get('adminSurname') ?? '').trim()
+    const adminCpf = String(formData.get('adminCpf') ?? '').trim()
+    const adminPassword = String(formData.get('adminPassword') ?? '')
+    const adminUsername = String(formData.get('adminUsername') ?? '').trim()
+
+    try {
+      const response = await createMotherCompany(token, {
+        registeredCompanyName: String(formData.get('registeredCompanyName') ?? '').trim(),
+        tradeName: motherTradeName.trim(),
+        cnpj: String(formData.get('cnpj') ?? '').trim(),
+        email: String(formData.get('email') ?? '').trim() || undefined,
+        phone: String(formData.get('phone') ?? '').trim() || undefined,
+        ...(adminName && adminCpf && adminPassword
+          ? {
+              admin: {
+                name: adminName,
+                surname: adminSurname || 'Administrador',
+                cpf: adminCpf,
+                password: adminPassword,
+                ...(adminUsername ? { username: adminUsername } : {}),
+              },
+            }
+          : {}),
+      })
+
+      setIsCreateMotherOpen(false)
+      setMotherTradeName('')
+      setNotice(
+        response.adminUser
+          ? `Empresa "${response.company.tradeName}" criada! Login do Admin Cliente: ${response.adminUser.username}`
+          : `Empresa "${response.company.tradeName}" criada com sucesso.`,
+      )
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      setCreateMotherError(err instanceof Error ? err.message : 'Não foi possível cadastrar a empresa.')
+    } finally {
+      setIsCreatingMother(false)
+    }
+  }
+
+  async function handleToggleMotherActive(mother: HierarchyMother) {
+    setError('')
+    setNotice('')
+    try {
+      await updateMotherCompany(token, mother.id, { active: !mother.active })
+      setNotice(`Empresa "${mother.tradeName}" ${mother.active ? 'desativada' : 'reativada'}.`)
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível alterar o status da empresa.')
+    }
+  }
+
   return (
     <div className="platform-admin-shell">
       <div className="platform-admin-header">
@@ -140,18 +218,40 @@ export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) 
             Visão consolidada de infraestrutura, telemetria em tempo real e hierarquia multi-tenant de todas as empresas.
           </p>
         </div>
-        <button
-          className="management-secondary"
-          onClick={() => setRefreshKey((k) => k + 1)}
-          disabled={isLoading}
-          type="button"
-          title="Atualizar métricas e hierarquia"
-        >
-          {isLoading ? 'Atualizando...' : '↻ Atualizar'}
-        </button>
+        <div className="platform-admin-actions">
+          <button
+            className="management-primary"
+            onClick={() => {
+              setCreateMotherError('')
+              setIsCreateMotherOpen(true)
+            }}
+            type="button"
+          >
+            + Nova Empresa (Mother)
+          </button>
+          {onOpenDatabase && (
+            <button
+              className="management-secondary"
+              onClick={onOpenDatabase}
+              type="button"
+            >
+              Tabelas Brutas
+            </button>
+          )}
+          <button
+            className="management-secondary"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={isLoading}
+            type="button"
+            title="Atualizar métricas e hierarquia"
+          >
+            {isLoading ? 'Atualizando...' : '↻ Atualizar'}
+          </button>
+        </div>
       </div>
 
       {error && <div className="management-message is-error">{error}</div>}
+      {notice && <div className="management-message is-success">{notice}</div>}
 
       {/* 1. CARDS SUPERIORES: TELEMETRIA E SAÚDE DO SISTEMA */}
       <section className="platform-metrics-grid">
@@ -193,7 +293,7 @@ export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) 
             {health?.memoryUsageMb ? `${health.memoryUsageMb} MB` : '—'}
           </div>
           <div className="platform-metric-meta">
-            Processo Node.js Backend
+            Runtime Bun / Fastify Backend
           </div>
         </div>
 
@@ -296,6 +396,18 @@ export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) 
                         }}
                       >
                         👥 Ver Clientes
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`platform-toggle-btn ${mother.active ? 'is-active' : 'is-inactive'}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void handleToggleMotherActive(mother)
+                        }}
+                        title={mother.active ? 'Desativar empresa contratante' : 'Reativar empresa contratante'}
+                      >
+                        {mother.active ? 'Ativa' : 'Inativa'}
                       </button>
                     </div>
                   </div>
@@ -405,6 +517,111 @@ export function PlatformAdminDashboard({ token, onLogout }: PlatformAdminProps) 
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL: CADASTRO DE NOVA EMPRESA MOTHER + ADMIN CLIENTE */}
+      {isCreateMotherOpen && (
+        <div className="branch-modal-backdrop" onClick={() => setIsCreateMotherOpen(false)}>
+          <div className="branch-modal platform-mother-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="branch-modal-header">
+              <div>
+                <p className="dashboard-card-index">ONBOARDING DE CLIENTE SAAS</p>
+                <h3>Cadastrar Empresa Matriz (Mother)</h3>
+              </div>
+              <button
+                type="button"
+                className="branch-modal-close"
+                onClick={() => setIsCreateMotherOpen(false)}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </div>
+
+            {createMotherError && (
+              <div className="management-message is-error" style={{ marginBottom: 12 }}>
+                {createMotherError}
+              </div>
+            )}
+
+            <form className="branch-form" onSubmit={handleCreateMother}>
+              <label>
+                Razão Social *
+                <input name="registeredCompanyName" required placeholder="Ex.: Empresa Alpha Engenharia LTDA" />
+              </label>
+              <label>
+                Nome Fantasia *
+                <input
+                  name="tradeName"
+                  required
+                  value={motherTradeName}
+                  onChange={(e) => setMotherTradeName(e.target.value)}
+                  placeholder="Ex.: Alpha Engenharia"
+                />
+              </label>
+              <label>
+                CNPJ *
+                <input name="cnpj" required maxLength={18} placeholder="00.000.000/0000-00" />
+              </label>
+              <div className="platform-form-pair">
+                <label>
+                  E-mail (Opcional)
+                  <input name="email" type="email" placeholder="contato@empresa.com" />
+                </label>
+                <label>
+                  Telefone (Opcional)
+                  <input name="phone" placeholder="(11) 99999-9999" />
+                </label>
+              </div>
+
+              <div className="platform-form-divider">
+                Admin Inicial da Empresa (perfil company_admin)
+              </div>
+
+              <div className="platform-form-pair">
+                <label>
+                  Nome do Admin *
+                  <input name="adminName" required placeholder="Ex.: Carlos" />
+                </label>
+                <label>
+                  Sobrenome *
+                  <input name="adminSurname" required placeholder="Ex.: Silva" />
+                </label>
+              </div>
+              <div className="platform-form-pair">
+                <label>
+                  CPF do Admin *
+                  <input name="adminCpf" required maxLength={14} placeholder="000.000.000-00" />
+                </label>
+                <label>
+                  Senha Inicial *
+                  <input name="adminPassword" type="password" required minLength={6} placeholder="Mínimo 6 caracteres" />
+                </label>
+              </div>
+              <label>
+                Login do Admin Cliente (automático se vazio)
+                <input
+                  name="adminUsername"
+                  placeholder={`administrator.${slugifyTradeName(motherTradeName)}`}
+                />
+              </label>
+
+              <div className="branch-form-actions">
+                <button
+                  type="button"
+                  className="management-secondary"
+                  onClick={() => setIsCreateMotherOpen(false)}
+                  disabled={isCreatingMother}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="management-primary" disabled={isCreatingMother}>
+                  {isCreatingMother ? 'Cadastrando...' : 'Criar Empresa + Admin'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

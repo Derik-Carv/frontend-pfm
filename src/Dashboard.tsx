@@ -4,9 +4,10 @@ import AdminPanel from './AdminPanel'
 import ManagementPanel from './Management'
 import NfPanel from './NfPanel'
 import { CompanySelector } from './CompanySelector'
+import { CompanyManagementPanel } from './CompanyManagementPanel'
 import './Dashboard.css'
 
-type Role = 'administrator' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
+type Role = 'administrator' | 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
 type FinderType = 'id' | 'client' | 'price' | 'initialdate' | 'finishdate'
 type Theme = 'dark' | 'light'
 
@@ -188,12 +189,14 @@ function ServiceBars({
 
 function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const role = tokenRole(token)
+  const isPlatformAdmin = role === 'administrator'
+  const isCompanyAdmin = role === 'company_admin'
   const collaboratorView = role === 'colaborator' || role === ''
   const [overview, setOverview] = useState<Overview | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0, hasMore: false })
-  const [isOverviewLoading, setIsOverviewLoading] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isOverviewLoading, setIsOverviewLoading] = useState(!isPlatformAdmin)
+  const [isLoading, setIsLoading] = useState(!isPlatformAdmin)
   const [refreshing, setRefreshing] = useState(0)
   const [loadError, setLoadError] = useState('')
   const [search, setSearch] = useState('')
@@ -202,7 +205,17 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [detail, setDetail] = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
-  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'admin'>('overview')
+  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'company' | 'admin'>(
+    isPlatformAdmin ? 'admin' : 'overview',
+  )
+
+  useEffect(() => {
+    if (isPlatformAdmin) {
+      setActiveArea('admin')
+    } else if (activeArea === 'admin') {
+      setActiveArea('overview')
+    }
+  }, [isPlatformAdmin])
 
   // BI Interactivity States
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<'all' | 'finished' | 'pending' | null>(null)
@@ -214,11 +227,16 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [crossSelectedServiceId, setCrossSelectedServiceId] = useState<string | null>(null)
   const [expandedChart, setExpandedChart] = useState<'top3' | 'recent' | 'oldest' | null>(null)
 
-  const canAccessNf = role === 'administrator' || role === 'manager' || role === 'finance'
-  const canAccessAdmin = role === 'administrator'
+  const canAccessNf = isCompanyAdmin || role === 'manager' || role === 'finance'
+  const canAccessCompanyManagement = isCompanyAdmin
+  const canAccessAdmin = isPlatformAdmin
 
   useEffect(() => {
     let active = true
+    if (isPlatformAdmin) {
+      setIsOverviewLoading(false)
+      return () => { active = false }
+    }
 
     async function loadDashboard() {
       setIsOverviewLoading(true)
@@ -241,12 +259,16 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
 
     void loadDashboard()
     return () => { active = false }
-  }, [onLogout, refreshing, token])
+  }, [isPlatformAdmin, onLogout, refreshing, token])
 
   useEffect(() => {
     let active = true
 
     async function loadServicesPage() {
+      if (isPlatformAdmin) {
+        setIsLoading(false)
+        return
+      }
       setIsLoading(true)
       setLoadError('')
 
@@ -281,7 +303,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
 
     void loadServicesPage()
     return () => { active = false }
-  }, [collaboratorView, currentPage, onLogout, pageSize, refreshing, token])
+  }, [collaboratorView, currentPage, isPlatformAdmin, onLogout, pageSize, refreshing, token])
 
   const overviewServices = useMemo(() => overview
     ? uniqueServices(overview.highValueServices, overview.recentServices, overview.oldestServices)
@@ -443,19 +465,27 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           <span>Derik Flash <i>/</i> <strong>Analytics BI</strong></span>
         </a>
         <nav className="dashboard-section-nav" aria-label="Navegação principal">
-          <button aria-current={activeArea === 'overview' ? 'page' : undefined} onClick={() => setActiveArea('overview')} type="button">Dashboard (BI)</button>
-          <button aria-current={activeArea === 'services' ? 'page' : undefined} onClick={() => setActiveArea('services')} type="button">Serviços</button>
-          <button aria-current={activeArea === 'clients' ? 'page' : undefined} onClick={() => setActiveArea('clients')} type="button">Clientes</button>
-          {canAccessNf && <button aria-current={activeArea === 'nf' ? 'page' : undefined} onClick={() => setActiveArea('nf')} type="button">Notas fiscais</button>}
-          {canAccessAdmin && <button aria-current={activeArea === 'admin' ? 'page' : undefined} onClick={() => setActiveArea('admin')} type="button">Administração</button>}
+          {isPlatformAdmin ? (
+            <button aria-current={activeArea === 'admin' ? 'page' : undefined} onClick={() => setActiveArea('admin')} type="button">Central SaaS (Plataforma)</button>
+          ) : (
+            <>
+              <button aria-current={activeArea === 'overview' ? 'page' : undefined} onClick={() => setActiveArea('overview')} type="button">Dashboard (BI)</button>
+              <button aria-current={activeArea === 'services' ? 'page' : undefined} onClick={() => setActiveArea('services')} type="button">Serviços</button>
+              <button aria-current={activeArea === 'clients' ? 'page' : undefined} onClick={() => setActiveArea('clients')} type="button">Clientes</button>
+              {canAccessNf && <button aria-current={activeArea === 'nf' ? 'page' : undefined} onClick={() => setActiveArea('nf')} type="button">Notas fiscais</button>}
+              {canAccessCompanyManagement && <button aria-current={activeArea === 'company' ? 'page' : undefined} onClick={() => setActiveArea('company')} type="button">Minha Empresa</button>}
+            </>
+          )}
         </nav>
         <div className="dashboard-tools">
-          <CompanySelector
-            onLogout={onLogout}
-            onTenantChanged={() => setRefreshing((val) => val + 1)}
-            role={role}
-            token={token}
-          />
+          {!isPlatformAdmin && (
+            <CompanySelector
+              onLogout={onLogout}
+              onTenantChanged={() => setRefreshing((val) => val + 1)}
+              role={role}
+              token={token}
+            />
+          )}
           <div className="dashboard-theme-control" role="group" aria-label="Tema da tela">
             <button aria-pressed={theme === 'light'} onClick={() => onThemeChange('light')} type="button">Claro</button>
             <button aria-pressed={theme === 'dark'} onClick={() => onThemeChange('dark')} type="button">Escuro</button>
@@ -1017,7 +1047,13 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         )}
         </> : activeArea === 'nf' ? (
           <NfPanel key={`nf-${token}-${refreshing}`} onLogout={onLogout} role={role} token={token} />
-        ) : activeArea === 'admin' ? (
+        ) : activeArea === 'company' ? (
+          <CompanyManagementPanel
+            onCompanyChanged={() => setRefreshing((value) => value + 1)}
+            onLogout={onLogout}
+            token={token}
+          />
+        ) : activeArea === 'admin' && canAccessAdmin ? (
           <AdminPanel onLogout={onLogout} token={token} />
         ) : (
           <ManagementPanel
@@ -1026,7 +1062,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
             onLogout={onLogout}
             role={role}
             token={token}
-            view={activeArea}
+            view={activeArea === 'services' ? 'services' : 'clients'}
           />
         )}
 

@@ -114,7 +114,7 @@ async function loadAllClients(headers: HeadersInit) {
 }
 
 function NfPanel({ token, role, onLogout }: NfPanelProps) {
-  const canCreate = role === 'administrator' || role === 'finance'
+  const canCreate = role === 'administrator' || role === 'company_admin' || role === 'finance'
   const headers = { Authorization: `Bearer ${token}` }
   const [notes, setNotes] = useState<FiscalNote[]>([])
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null)

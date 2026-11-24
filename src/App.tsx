@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { apiRequest } from './services/api'
+import { apiRequest, clearTenantContext } from './services/api'
 import Dashboard from './Dashboard'
 import './App.css'
 
@@ -50,6 +50,7 @@ function App() {
           body: JSON.stringify({ username: loginUsername, password }),
         },
       )
+      clearTenantContext()
       localStorage.setItem('token', result.token)
       setToken(result.token)
       setUsername(loginUsername)
@@ -145,6 +146,7 @@ function App() {
   }
 
   const handleLogout = useCallback(() => {
+    clearTenantContext()
     localStorage.removeItem('token')
     localStorage.removeItem('passwordChangeRequired')
     setToken(null)

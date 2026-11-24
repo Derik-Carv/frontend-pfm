@@ -42,10 +42,10 @@ type ManagementProps = {
   onDataChanged: () => void
 }
 
-const serviceRoles = ['administrator', 'manager', 'finance']
-const clientRoles = ['administrator', 'manager', 'finance', 'colaborator']
-const clientCreateRoles = ['administrator', 'manager', 'finance']
-const clientEditRoles = ['administrator', 'manager', 'finance']
+const serviceRoles = ['administrator', 'company_admin', 'manager', 'finance']
+const clientRoles = ['administrator', 'company_admin', 'manager', 'finance', 'colaborator']
+const clientCreateRoles = ['administrator', 'company_admin', 'manager', 'finance']
+const clientEditRoles = ['administrator', 'company_admin', 'manager', 'finance']
 const clientPageSizes = [5, 10]
 
 async function fetchAllClients(headers: HeadersInit) {

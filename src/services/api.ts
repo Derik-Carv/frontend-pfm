@@ -22,6 +22,11 @@ export function setTenantContext(companyId: string, scope: 'single' | 'consolida
   window.dispatchEvent(new CustomEvent('pfm_tenant_change', { detail: { companyId, scope } }))
 }
 
+export function clearTenantContext() {
+  localStorage.removeItem(STORAGE_COMPANY_KEY)
+  localStorage.removeItem(STORAGE_VIEW_SCOPE_KEY)
+}
+
 export class ApiRequestError extends Error {
   readonly status: number
   readonly responseBody: unknown
@@ -49,10 +54,9 @@ export async function apiRequest<T>(
       headers.set('Content-Type', 'application/json')
     }
 
-    // Injeção automática dos headers de contexto Multi-Tenant apenas em rotas admin
-    // (rotas públicas e rotas normais não aceitam esses headers no CORS do backend)
-    const isAdminRoute = path.startsWith('/admin')
-    if (isAdminRoute) {
+    // Injeção automática dos headers de contexto Multi-Tenant em todas as rotas privadas
+    const isPrivateRoute = !path.startsWith('/public')
+    if (isPrivateRoute) {
       const companyId = getSelectedCompanyId()
       const viewScope = getViewScope()
       if (companyId && !headers.has('x-company-id')) {
@@ -86,8 +90,7 @@ export async function apiRequest<T>(
 
 export async function apiFileRequest(path: string, token: string) {
   const headers = new Headers({ Authorization: `Bearer ${token}` })
-  // Headers multi-tenant apenas em rotas admin (backend CORS não permite em outras rotas)
-  if (path.startsWith('/admin')) {
+  if (!path.startsWith('/public')) {
     const companyId = getSelectedCompanyId()
     const viewScope = getViewScope()
     if (companyId) {
