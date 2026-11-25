@@ -463,9 +463,9 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   return (
     <main className="dashboard-shell">
       <header className="dashboard-topbar">
-        <a className="dashboard-wordmark" href="#inicio" aria-label="Derik Flash, painel inicial">
-          <span className="dashboard-monogram" aria-hidden="true">D</span>
-          <span>Derik Flash <i>/</i> <strong>Analytics BI</strong></span>
+        <a className="dashboard-wordmark" href="#inicio" aria-label="PFM, painel inicial">
+          <span className="dashboard-monogram" aria-hidden="true">P</span>
+          <span>PFM <i>/</i> <strong>Analytics BI</strong></span>
         </a>
         <nav className="dashboard-section-nav" aria-label="Navegação principal">
           {isPlatformAdmin ? (
@@ -1080,7 +1080,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         )}
 
         <footer className="dashboard-footer">
-          <span>DERIK FLASH · CONFORMIDADE LGPD (DPO: privacidade@derikdev.cloud)</span>
+          <span>PFM · CONFORMIDADE LGPD (DPO: privacidade@derikdev.cloud)</span>
           <span style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button
               className="text-button"

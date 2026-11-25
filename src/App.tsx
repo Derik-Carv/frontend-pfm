@@ -753,7 +753,7 @@ function App() {
               </p>
           </>
           <p className="form-footnote">
-            © 2026 Derik Flash ·{' '}
+            © 2026 PFM ·{' '}
             <button className="text-button footnote-link" onClick={() => setLegalModalDoc('privacy')} type="button">
               Política de Privacidade
             </button>{' '}

@@ -16,7 +16,7 @@ const DEFAULT_META: LegalMetadata = {
   termsVersion: '2026-11-24-v2',
   privacyVersion: '2026-11-24-v2',
   controller: {
-    name: 'Derik Flash (Plataforma PFM)',
+    name: 'PFM',
     document: null,
     address: null,
     jurisdiction: 'Brasil',
