@@ -109,7 +109,6 @@ const fieldsByTable: Record<AdminTable, FieldDefinition[]> = {
     { key: 'emissionDate', label: 'Data de emissão', type: 'date', required: true },
     { key: 'cancelDate', label: 'Data de cancelamento', type: 'date', placeholder: 'Opcional' },
     { key: 'totalValue', label: 'Valor total', type: 'number', required: true, placeholder: '0,00' },
-    { key: 'pathFile', label: 'Caminho do arquivo', placeholder: 'Opcional' },
     { key: 'servicesId', label: 'ID do serviço', required: true },
     { key: 'movimentationId', label: 'ID da movimentação', placeholder: 'Opcional' },
     { key: 'active', label: 'Ativa', type: 'boolean' },

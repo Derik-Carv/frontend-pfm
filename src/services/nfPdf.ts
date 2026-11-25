@@ -32,14 +32,25 @@ function normalizeMoney(value: string) {
   return Number.isFinite(amount) ? String(amount) : ''
 }
 
+const MAX_PDF_BYTES = 10 * 1024 * 1024
+const MAX_PDF_PAGES = 20
+
 export async function extractNfFields(file: File): Promise<NfPdfExtraction> {
+  if (file.size === 0 || file.size > MAX_PDF_BYTES) {
+    throw new Error('O arquivo PDF deve ter entre 1 byte e 10 MB.')
+  }
   const pdfjs = await import('pdfjs-dist')
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
-  const loadingTask = pdfjs.getDocument({ data: await file.arrayBuffer() })
+  const loadingTask = pdfjs.getDocument({
+    data: await file.arrayBuffer(),
+  })
   const pdf = await loadingTask.promise
   const pageTexts: string[] = []
 
   try {
+    if (pdf.numPages > MAX_PDF_PAGES) {
+      throw new Error(`O PDF excede o limite de ${MAX_PDF_PAGES} páginas.`)
+    }
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber)
       const content = await page.getTextContent()

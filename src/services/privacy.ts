@@ -38,6 +38,7 @@ export type PrivacyMeResponse = {
     emailVerified: boolean
     cpfMasked: string
     role: string
+    passwordChangeRequired?: boolean
     createdAt: string
     anonymizedAt: string | null
   }

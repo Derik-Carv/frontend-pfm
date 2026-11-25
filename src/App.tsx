@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { apiRequest, clearTenantContext } from './services/api'
-import { acceptLegalDocuments, getPublicLegalMetadata } from './services/privacy'
+import { acceptLegalDocuments, getPrivacyMe, getPublicLegalMetadata } from './services/privacy'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import Dashboard from './Dashboard'
 import './App.css'
@@ -331,7 +331,7 @@ function App() {
     }
 
     try {
-      await apiRequest<{ message: string; passwordChangeRequired: boolean }>(
+      const result = await apiRequest<{ message: string; passwordChangeRequired: boolean; token?: string }>(
         '/account/password',
         {
           method: 'PATCH',
@@ -339,6 +339,10 @@ function App() {
           body: JSON.stringify({ currentPassword, newPassword }),
         },
       )
+      if (result.token) {
+        localStorage.setItem('token', result.token)
+        setToken(result.token)
+      }
       setPasswordChangeRequired(false)
       localStorage.removeItem('passwordChangeRequired')
       showMessage('Senha alterada. O painel está liberado.')
@@ -364,6 +368,30 @@ function App() {
     setScreen('login')
     showMessage('Você saiu da sua conta.')
   }, [])
+
+  useEffect(() => {
+    if (!token) return
+    let active = true
+    void getPrivacyMe(token)
+      .then((me) => {
+        if (!active) return
+        const needsPassword = Boolean(me.user.passwordChangeRequired)
+        const needsLegal = Boolean(me.legalAcceptanceRequired)
+        setPasswordChangeRequired(needsPassword)
+        localStorage.setItem('passwordChangeRequired', String(needsPassword))
+        setLegalAcceptanceRequired(needsLegal)
+        localStorage.setItem('legalAcceptanceRequired', String(needsLegal))
+      })
+      .catch((error) => {
+        if (!active) return
+        if (error instanceof Error && 'status' in error && error.status === 401) {
+          handleLogout()
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [token, handleLogout])
 
   async function handleAcceptLegalGate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

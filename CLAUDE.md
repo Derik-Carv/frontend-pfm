@@ -2,6 +2,8 @@
 
 Este documento é a referência canônica do projeto **frontend-pfm** voltada para desenvolvedores e agentes de Inteligência Artificial. Toda e qualquer alteração no código deve respeitar integralmente as regras, convenções, padrões de projeto e decisões de arquitetura descritas a seguir.
 
+> **Segurança Obrigatória:** Siga sempre os padrões OWASP documentados em [`../backend/SECURITY.md`](../backend/SECURITY.md) (CSP/headers no `nginx.conf` e `vercel.json`, validação de blobs/PDFs, proteção contra XSS e respeito estrito ao RBAC no cliente e no servidor).
+
 ---
 
 ## 1. Visão Geral e Contexto de Negócio

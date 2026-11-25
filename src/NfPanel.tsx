@@ -458,7 +458,12 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     }
     try {
       const response = await apiFileRequest(`/notes/${encodeURIComponent(note.id)}/file${download ? '?download=true' : ''}`, token)
-      const url = URL.createObjectURL(await response.blob())
+      const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
+      if (!contentType.includes('application/pdf')) {
+        throw new Error('O arquivo retornado não é um PDF válido.')
+      }
+      const pdfBlob = new Blob([await response.arrayBuffer()], { type: 'application/pdf' })
+      const url = URL.createObjectURL(pdfBlob)
       if (download) {
         const anchor = document.createElement('a')
         anchor.href = url
@@ -523,6 +528,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     try {
       const clientName = clientNames.get(emailModalNote.thirdPartyClientId) || 'Cliente'
       const payload = {
+        nfId: emailModalNote.id,
         numberNf: emailModalNote.numberNf || '',
         type: 'Serviço Prestado',
         value: String(emailModalNote.totalValue || '0'),

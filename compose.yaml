@@ -5,6 +5,10 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:?Defina VITE_API_URL antes de subir o frontend}
     container_name: pfm_frontend
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:8080"
     restart: unless-stopped
