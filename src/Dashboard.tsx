@@ -7,6 +7,7 @@ import { CompanySelector } from './CompanySelector'
 import { CompanyManagementPanel } from './CompanyManagementPanel'
 import { PrivacyPanel } from './PrivacyPanel'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
+import { getPublicLegalMetadata } from './services/privacy'
 import './Dashboard.css'
 
 type Role = 'administrator' | 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
@@ -211,6 +212,19 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
     isPlatformAdmin ? 'admin' : 'overview',
   )
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
+  const [dpoEmail, setDpoEmail] = useState('')
+
+  useEffect(() => {
+    let active = true
+    void getPublicLegalMetadata()
+      .then((meta) => {
+        if (active && meta.dpo?.email) setDpoEmail(meta.dpo.email)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     if (isPlatformAdmin && activeArea !== 'privacy') {
@@ -1080,7 +1094,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         )}
 
         <footer className="dashboard-footer">
-          <span>PFM · CONFORMIDADE LGPD (DPO: privacidade@derikdev.cloud)</span>
+          <span>PFM · CONFORMIDADE LGPD{dpoEmail ? ` (DPO: ${dpoEmail})` : ''}</span>
           <span style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button
               className="text-button"

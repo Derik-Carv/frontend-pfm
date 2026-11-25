@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { apiRequest, clearTenantContext } from './services/api'
-import { acceptLegalDocuments } from './services/privacy'
+import { acceptLegalDocuments, getPublicLegalMetadata } from './services/privacy'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import Dashboard from './Dashboard'
 import './App.css'
@@ -46,6 +46,19 @@ function App() {
   const [legalAcceptanceRequired, setLegalAcceptanceRequired] = useState(() => localStorage.getItem('legalAcceptanceRequired') === 'true')
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
   const [legalAgreeChecked, setLegalAgreeChecked] = useState(false)
+  const [dpoEmail, setDpoEmail] = useState('')
+
+  useEffect(() => {
+    let active = true
+    void getPublicLegalMetadata()
+      .then((meta) => {
+        if (active && meta.dpo?.email) setDpoEmail(meta.dpo.email)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Fluxo de solicitação de empresa em 2 etapas (dados -> código OTP no e-mail do admin)
   const [registerStep, setRegisterStep] = useState<'form' | 'code'>('form')
@@ -760,8 +773,8 @@ function App() {
             ·{' '}
             <button className="text-button footnote-link" onClick={() => setLegalModalDoc('terms')} type="button">
               Termos de Uso
-            </button>{' '}
-            · DPO: privacidade@derikdev.cloud
+            </button>
+            {dpoEmail ? ` · DPO: ${dpoEmail}` : ''}
           </p>
         </div>
       </section>
