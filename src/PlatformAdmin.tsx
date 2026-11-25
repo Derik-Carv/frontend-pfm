@@ -16,8 +16,12 @@ import {
 import { createMotherCompany, updateMotherCompany } from './services/companies'
 import {
   getAdminAuditLogs,
+  getSecurityIncidents,
+  createSecurityIncident,
+  updateSecurityIncident,
   triggerLgpdCleanup,
   type AuditLogItem,
+  type SecurityIncident,
 } from './services/privacy'
 import './PlatformAdmin.css'
 
@@ -65,6 +69,9 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
   const [auditTotal, setAuditTotal] = useState(0)
   const [auditLoading, setAuditLoading] = useState(false)
   const [cleaningUp, setCleaningUp] = useState(false)
+  const [incidents, setIncidents] = useState<SecurityIncident[]>([])
+  const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false)
+  const [savingIncident, setSavingIncident] = useState(false)
 
   // Modal de nova empresa Mother + Admin Cliente
   const [isCreateMotherOpen, setIsCreateMotherOpen] = useState(false)
@@ -91,11 +98,12 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
       setIsLoading(true)
       setError('')
       try {
-        const [metricsRes, hierarchyRes, requestsRes, auditRes] = await Promise.all([
+        const [metricsRes, hierarchyRes, requestsRes, auditRes, incidentsRes] = await Promise.all([
           getSystemMetrics(token),
           getSystemHierarchy(token),
           getCompanyRequests(token, 'pending'),
           getAdminAuditLogs(token, { page: 1, limit: 25 }),
+          getSecurityIncidents(token),
         ])
         if (!active) return
         setHealth(metricsRes.data.systemHealth)
@@ -104,6 +112,7 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
         setPendingRequests(requestsRes.requests)
         setAuditLogs(auditRes.logs)
         setAuditTotal(auditRes.total)
+        setIncidents(incidentsRes.incidents)
 
         // Por padrão, se houver apenas uma matriz, já deixa expandida
         if (hierarchyRes.mothers.length === 1) {
@@ -624,7 +633,7 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                 try {
                   const res = await triggerLgpdCleanup(token)
                   setNotice(
-                    `${res.message} OTPs removidos: ${res.deletedOtpCodes}, hashes limpos: ${res.scrubbedRequestHashes}, rejeições antigas expurgadas: ${res.deletedRejectedRequests}.`,
+                    `${res.message} OTPs removidos: ${res.deletedOtpCodes}, hashes limpos: ${res.scrubbedRequestHashes}, rejeições antigas expurgadas: ${res.deletedRejectedRequests}, logs > 5 anos: ${res.deletedExpiredAuditLogs}.`,
                   )
                 } catch (err) {
                   setError(err instanceof Error ? err.message : 'Erro ao executar limpeza LGPD.')
@@ -662,6 +671,96 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                     <td>{log.targetTable ? `${log.targetTable}${log.targetId ? ` (${log.targetId.slice(0, 8)}…)` : ''}` : '—'}</td>
                     <td>{log.statusCode ?? '—'}</td>
                     <td>{log.ipAddress || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="platform-section-header" style={{ marginTop: 28 }}>
+          <div>
+            <h2>Registro de Incidentes de Segurança (Res. CD/ANPD nº 15/2024)</h2>
+            <p className="platform-section-sub">
+              Guarda obrigatória mínima de 5 anos. Comunicação à ANPD e titulares em até 3 dias úteis (ou 6 dias úteis para Agente de Pequeno Porte) quando houver risco/dano relevante.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="platform-create-btn"
+            onClick={() => setIsIncidentModalOpen(true)}
+          >
+            + Registrar Incidente
+          </button>
+        </div>
+
+        {incidents.length === 0 ? (
+          <div className="management-empty">Nenhum incidente de segurança registrado.</div>
+        ) : (
+          <div className="platform-clients-table-scroll">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Detectado em</th>
+                  <th>Incidente</th>
+                  <th>Severidade</th>
+                  <th>Risco Relevante / ANPD</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incidents.map((inc) => (
+                  <tr key={inc.id}>
+                    <td>{new Date(inc.detectedAt).toLocaleString('pt-BR')}</td>
+                    <td>
+                      <strong>{inc.title}</strong>
+                      <div className="platform-section-sub">{inc.affectedDataCategories}</div>
+                    </td>
+                    <td>{inc.severity.toUpperCase()}</td>
+                    <td>
+                      {inc.relevantRisk ? 'Sim' : 'Não'} ·{' '}
+                      {inc.notifiedAnpd ? 'ANPD notificada' : 'ANPD pendente'}
+                    </td>
+                    <td>{inc.status}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {!inc.notifiedAnpd && (
+                          <button
+                            type="button"
+                            className="platform-view-clients-btn"
+                            onClick={async () => {
+                              try {
+                                const res = await updateSecurityIncident(token, inc.id, { notifiedAnpd: true })
+                                setIncidents((prev) => prev.map((item) => item.id === inc.id ? res.incident : item))
+                                setNotice(res.message)
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : 'Erro ao atualizar incidente.')
+                              }
+                            }}
+                          >
+                            Marcar ANPD Notificada
+                          </button>
+                        )}
+                        {inc.status !== 'closed' && (
+                          <button
+                            type="button"
+                            className="platform-view-clients-btn"
+                            onClick={async () => {
+                              try {
+                                const res = await updateSecurityIncident(token, inc.id, { status: 'closed' })
+                                setIncidents((prev) => prev.map((item) => item.id === inc.id ? res.incident : item))
+                                setNotice(res.message)
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : 'Erro ao encerrar incidente.')
+                              }
+                            }}
+                          >
+                            Encerrar
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -880,6 +979,111 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                   disabled={reviewingId === rejectingRequest.id}
                 >
                   {reviewingId === rejectingRequest.id ? 'Recusando...' : 'Confirmar recusa'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isIncidentModalOpen && (
+        <div className="branch-modal-backdrop" onClick={() => setIsIncidentModalOpen(false)}>
+          <div className="branch-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="branch-modal-header">
+              <div>
+                <p className="dashboard-card-index">RES. CD/ANPD Nº 15/2024</p>
+                <h3>Registrar Incidente de Segurança</h3>
+              </div>
+              <button
+                type="button"
+                className="branch-modal-close"
+                onClick={() => setIsIncidentModalOpen(false)}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </div>
+            <form
+              className="branch-form"
+              onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+                event.preventDefault()
+                const fd = new FormData(event.currentTarget)
+                const estRaw = String(fd.get('affectedSubjectsEstimate') ?? '').trim()
+                setSavingIncident(true)
+                setError('')
+                setNotice('')
+                try {
+                  const res = await createSecurityIncident(token, {
+                    title: String(fd.get('title') ?? '').trim(),
+                    description: String(fd.get('description') ?? '').trim(),
+                    severity: String(fd.get('severity') ?? 'medium') as 'low' | 'medium' | 'high' | 'critical',
+                    affectedDataCategories: String(fd.get('affectedDataCategories') ?? '').trim(),
+                    ...(estRaw ? { affectedSubjectsEstimate: Number(estRaw) } : {}),
+                    relevantRisk: fd.get('relevantRisk') === 'on',
+                    notifiedAnpd: fd.get('notifiedAnpd') === 'on',
+                    notifiedSubjects: fd.get('notifiedSubjects') === 'on',
+                    containmentMeasures: String(fd.get('containmentMeasures') ?? '').trim() || undefined,
+                  })
+                  setIncidents((prev) => [res.incident, ...prev])
+                  setNotice(res.message)
+                  setIsIncidentModalOpen(false)
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Erro ao registrar incidente.')
+                } finally {
+                  setSavingIncident(false)
+                }
+              }}
+            >
+              <label>
+                Título do Incidente *
+                <input name="title" required minLength={3} placeholder="Ex.: Tentativa de acesso não autorizado" />
+              </label>
+              <div className="platform-form-pair">
+                <label>
+                  Severidade *
+                  <select name="severity" defaultValue="medium">
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                    <option value="critical">Crítica</option>
+                  </select>
+                </label>
+                <label>
+                  Titulares afetados (estimativa)
+                  <input name="affectedSubjectsEstimate" type="number" min={0} placeholder="Opcional" />
+                </label>
+              </div>
+              <label>
+                Categorias de Dados Afetados *
+                <input name="affectedDataCategories" required minLength={2} placeholder="Ex.: E-mail cadastral, logs de sessão" />
+              </label>
+              <label>
+                Descrição Detalhada *
+                <textarea name="description" required minLength={5} rows={3} placeholder="Descreva o ocorrido e a origem identificada" />
+              </label>
+              <label>
+                Medidas de Contenção e Mitigação
+                <textarea name="containmentMeasures" rows={2} placeholder="Ações técnicas adotadas para conter o risco" />
+              </label>
+              <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <input name="relevantRisk" type="checkbox" style={{ width: 16, height: 16 }} />
+                <span>Acarreta risco ou dano relevante aos titulares</span>
+              </label>
+              <div className="platform-form-pair">
+                <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <input name="notifiedAnpd" type="checkbox" style={{ width: 16, height: 16 }} />
+                  <span>ANPD já comunicada</span>
+                </label>
+                <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <input name="notifiedSubjects" type="checkbox" style={{ width: 16, height: 16 }} />
+                  <span>Titulares já comunicados</span>
+                </label>
+              </div>
+              <div className="branch-form-actions">
+                <button type="button" className="management-secondary" onClick={() => setIsIncidentModalOpen(false)} disabled={savingIncident}>
+                  Cancelar
+                </button>
+                <button type="submit" className="management-primary" disabled={savingIncident}>
+                  {savingIncident ? 'Registrando...' : 'Salvar Incidente'}
                 </button>
               </div>
             </form>

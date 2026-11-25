@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { apiRequest } from './services/api'
+import { anonymizeClient } from './services/privacy'
 import './Management.css'
 
 type Client = {
@@ -579,6 +580,32 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                                     </svg>
                                     Editar cliente
                                   </button>
+                                  {role === 'company_admin' && client.active && (
+                                    <button
+                                      className="management-edit-btn"
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        const confirmed = window.confirm(
+                                          `Anonimizar "${client.tradeName}" conforme LGPD (Art. 18, VI)?\n\nIsso removerá nome, CPF/e-mail e desativará o cadastro de forma irreversível, preservando apenas notas fiscais e serviços vinculados pelo prazo legal de 5 anos (Art. 16, I).`,
+                                        )
+                                        if (!confirmed) return
+                                        setError('')
+                                        setNotice('')
+                                        try {
+                                          const res = await anonymizeClient(token, client.id)
+                                          setNotice(`${res.message} ${res.fiscalRetentionNotice}`)
+                                          setReloadCount((c) => c + 1)
+                                          onDataChanged()
+                                        } catch (err) {
+                                          setError(err instanceof Error ? err.message : 'Erro ao anonimizar cliente.')
+                                        }
+                                      }}
+                                      style={{ borderColor: 'rgba(239, 68, 68, 0.45)', color: '#fca5a5' }}
+                                      type="button"
+                                    >
+                                      Anonimizar LGPD
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>

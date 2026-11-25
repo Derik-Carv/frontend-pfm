@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getPublicLegalMetadata, type LegalMetadata } from './services/privacy'
 import './LegalDocumentsModal.css'
 
 export type LegalDocKind = 'privacy' | 'terms'
@@ -11,14 +12,72 @@ type LegalDocumentsModalProps = {
   onClose: () => void
 }
 
+const DEFAULT_META: LegalMetadata = {
+  termsVersion: '2026-11-24-v2',
+  privacyVersion: '2026-11-24-v2',
+  dpo: {
+    name: 'Canal de Privacidade / Encarregado (Agente de Pequeno Porte — Res. CD/ANPD nº 2/2022 e nº 18/2024)',
+    email: 'privacidade@derikdev.cloud',
+  },
+  fiscalRetentionYears: 5,
+  auditLogRetentionYears: 5,
+  incidentRetentionYears: 5,
+  incidentNotificationBusinessDays: 3,
+  smallAgentNotificationBusinessDays: 6,
+  otpRetentionHours: 24,
+  rejectedRequestRetentionDays: 90,
+  subprocessors: [
+    {
+      name: 'Oracle Cloud Infrastructure',
+      purpose: 'Hospedagem da API e banco de dados PostgreSQL',
+      mechanism: 'Região Brasil / Cláusulas-Padrão Contratuais (Res. CD/ANPD nº 19/2024)',
+    },
+    {
+      name: 'Vercel',
+      purpose: 'Hospedagem da aplicação web frontend',
+      mechanism: 'Cláusulas-Padrão Contratuais (Res. CD/ANPD nº 19/2024)',
+    },
+    {
+      name: 'Provedor SMTP',
+      purpose: 'Envio de códigos OTP, notificações e notas fiscais',
+      mechanism: 'Cláusulas-Padrão Contratuais (Res. CD/ANPD nº 19/2024)',
+    },
+    {
+      name: 'Axiom (quando habilitado)',
+      purpose: 'Telemetria técnica e logs sanitizados de produção',
+      mechanism: 'Cláusulas-Padrão Contratuais (Res. CD/ANPD nº 19/2024) / Adequação UE quando aplicável',
+    },
+  ],
+}
+
 export function LegalDocumentsModal({
   initialDoc,
-  dpoEmail = 'privacidade@derikdev.cloud',
-  privacyVersion = '2026-11-24-v1',
-  termsVersion = '2026-11-24-v1',
+  dpoEmail,
+  privacyVersion,
+  termsVersion,
   onClose,
 }: LegalDocumentsModalProps) {
   const [activeDoc, setActiveDoc] = useState<LegalDocKind>(initialDoc)
+  const [meta, setMeta] = useState<LegalMetadata>(DEFAULT_META)
+
+  useEffect(() => {
+    let active = true
+    void getPublicLegalMetadata()
+      .then((res) => {
+        if (active) setMeta(res)
+      })
+      .catch(() => {
+        // fallback para defaults locais se offline
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const resolvedDpoName = meta.dpo.name
+  const resolvedDpoEmail = dpoEmail || meta.dpo.email
+  const resolvedPrivacyVersion = privacyVersion || meta.privacyVersion
+  const resolvedTermsVersion = termsVersion || meta.termsVersion
 
   return (
     <div className="legal-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Documentos Legais LGPD">
@@ -54,68 +113,79 @@ export function LegalDocumentsModal({
         <div className="legal-modal-body">
           {activeDoc === 'privacy' ? (
             <>
-              <span className="legal-modal-meta">Versão vigente: {privacyVersion}</span>
+              <span className="legal-modal-meta">Versão vigente: {resolvedPrivacyVersion}</span>
 
               <h3>1. Papéis no Tratamento (Controlador e Operador)</h3>
               <p>
                 A plataforma <strong>Derik Flash (PFM)</strong> atua como <strong>Controladora</strong> dos dados de cadastro, autenticação, aprovação empresarial e auditoria de segurança dos usuários do SaaS, e como <strong>Operadora</strong> (Art. 5º, VII da LGPD) dos dados de clientes finais, serviços e notas fiscais inseridos por cada empresa contratante, a qual figura como Controladora da sua própria carteira.
               </p>
 
-              <h3>2. Dados Tratados e Finalidades</h3>
+              <h3>2. Dados Tratados e Bases Legais (Art. 7º)</h3>
               <ul>
-                <li><strong>Usuários da empresa e solicitantes:</strong> nome completo, CPF, e-mail corporativo, usuário, papel de acesso e senha criptografada (hash) — tratados para autenticação, controle de acesso multi-tenant e recuperação de conta (Art. 7º, V e IX).</li>
-                <li><strong>Dados fiscais e operacionais da empresa:</strong> CNPJ, razão social, clientes PF/PJ, movimentações e arquivos PDF de NFS-e — tratados sob instrução da empresa contratante e para cumprimento de obrigações legais e regulatórias (Art. 7º, II e V).</li>
-                <li><strong>Segurança e auditoria:</strong> endereço IP, agente de navegador, registro de aceites e trilha de auditoria de ações críticas — tratados em legítimo interesse e cumprimento do dever de segurança (Art. 7º, IX e Art. 46).</li>
+                <li><strong>Usuários da empresa e solicitantes:</strong> nome completo, CPF (mascarado em listagens), e-mail corporativo, usuário, perfil de acesso e senha em hash — tratados para execução de contrato, autenticação multi-tenant e recuperação de conta (Art. 7º, V e IX).</li>
+                <li><strong>Dados fiscais e operacionais da empresa:</strong> CNPJ, razão social, clientes PF/PJ, movimentações e arquivos PDF de NFS-e — tratados sob instrução da empresa contratante e para cumprimento de obrigações legais/regulatórias (Art. 7º, II e V).</li>
+                <li><strong>Segurança, auditoria e incidentes:</strong> endereço IP, agente de navegador, registro de aceites, trilha de auditoria e registro de incidentes — tratados para cumprimento do dever legal de segurança e prevenção à fraude (Art. 7º, IX, Art. 37 e Art. 46).</li>
               </ul>
 
               <h3>3. Prazos de Retenção e Obrigação Fiscal</h3>
               <ul>
-                <li><strong>Códigos OTP por e-mail:</strong> removidos automaticamente até 24 horas após expiração ou uso.</li>
+                <li><strong>Códigos OTP por e-mail:</strong> expurgados automaticamente até {meta.otpRetentionHours} horas após expiração ou uso.</li>
                 <li><strong>Senhas de solicitações pendentes:</strong> descartadas imediatamente da tabela de solicitação no ato de aprovação ou rejeição.</li>
-                <li><strong>Solicitações rejeitadas:</strong> expurgadas após 90 dias.</li>
-                <li><strong>Documentos e notas fiscais (Art. 16, I da LGPD):</strong> preservados pelo prazo legal tributário mínimo de <strong>5 anos</strong>, mesmo em caso de pedido de anonimização de conta.</li>
+                <li><strong>Solicitações rejeitadas:</strong> expurgadas após {meta.rejectedRequestRetentionDays} dias.</li>
+                <li><strong>Logs de auditoria e registro de incidentes (Res. CD/ANPD nº 15/2024):</strong> preservados por <strong>{meta.incidentRetentionYears} anos</strong> para rastreabilidade e prestação de contas.</li>
+                <li><strong>Documentos e notas fiscais (Art. 16, I da LGPD):</strong> preservados pelo prazo legal tributário mínimo de <strong>{meta.fiscalRetentionYears} anos</strong>, mesmo após anonimização de usuário ou cliente PF.</li>
               </ul>
 
               <h3>4. Armazenamento no Navegador (Sem Cookies de Rastreamento)</h3>
               <p>
-                Este aplicativo não utiliza cookies de publicidade, analytics comportamental ou rastreamento de terceiros. O armazenamento local (<code>localStorage</code>) é empregado exclusivamente para manter o token de sessão, a empresa selecionada e a preferência de tema claro/escuro.
+                Este aplicativo não utiliza cookies de publicidade, analytics comportamental ou rastreamento de terceiros. O armazenamento local (<code>localStorage</code>) é empregado exclusivamente para manter o token de sessão (sem CPF no payload), a empresa selecionada e o tema claro/escuro.
               </p>
 
-              <h3>5. Subprocessadores e Transferência Internacional (Art. 33)</h3>
+              <h3>5. Transferência Internacional e Subprocessadores (Res. CD/ANPD nº 19/2024)</h3>
               <p>
-                Para viabilizar a operação em nuvem, dados estritamente necessários podem trafegar por provedores contratados sob cláusulas de confidencialidade e segurança: <strong>Oracle Cloud Infrastructure</strong> (API e banco de dados), <strong>Vercel</strong> (entrega do aplicativo web), <strong>Provedor SMTP</strong> (envio de códigos e notificações) e <strong>Axiom</strong> (logs técnicos sanitizados sem senhas, CPFs ou tokens).
+                Quando houver transferência internacional de dados para infraestrutura ou serviços em nuvem fora do Brasil, ela observa os mecanismos legais do Art. 33 da LGPD e da Resolução CD/ANPD nº 19/2024 (Cláusulas-Padrão Contratuais da ANPD ou decisão de adequação reconhecida, como a da União Europeia):
               </p>
+              <ul>
+                {meta.subprocessors.map((sub) => (
+                  <li key={sub.name}>
+                    <strong>{sub.name}:</strong> {sub.purpose} — <em>{sub.mechanism}</em>.
+                  </li>
+                ))}
+              </ul>
 
-              <h3>6. Direitos do Titular (Art. 18) e Contato do Encarregado (DPO)</h3>
+              <h3>6. Direitos do Titular (Art. 18) e Encarregado / Canal (Res. CD/ANPD nº 18/2024)</h3>
               <p>
-                Você pode acessar, corrigir nome/sobrenome, exportar seus dados em JSON e solicitar a anonimização da sua conta diretamente na aba <strong>Privacidade (LGPD)</strong> após o login, ou contatar nosso Encarregado de Dados pelo e-mail <a href={`mailto:${dpoEmail}`}>{dpoEmail}</a>.
+                Você pode acessar, corrigir nome/sobrenome, exportar seus dados em JSON e solicitar a anonimização da sua conta na aba <strong>Privacidade (LGPD)</strong>. Clientes finais PF podem solicitar anonimização diretamente à empresa contratante, executável pelo <code>company_admin</code>.
+              </p>
+              <p>
+                <strong>Responsável / Canal de Privacidade:</strong> {resolvedDpoName} — <a href={`mailto:${resolvedDpoEmail}`}>{resolvedDpoEmail}</a>.
               </p>
             </>
           ) : (
             <>
-              <span className="legal-modal-meta">Versão vigente: {termsVersion}</span>
+              <span className="legal-modal-meta">Versão vigente: {resolvedTermsVersion}</span>
 
               <h3>1. Objeto e Acesso Multi-Tenant</h3>
               <p>
                 Estes Termos regulam o uso do sistema <strong>Derik Flash (PFM)</strong> pelas empresas contratantes e seus colaboradores autorizados. O ingresso de novas empresas depende de solicitação validada por e-mail e aprovação expressa do Administrador SaaS.
               </p>
 
-              <h3>2. Responsabilidades da Empresa Contratante (DPA Simplificado)</h3>
+              <h3>2. Responsabilidades da Empresa Contratante (DPA)</h3>
               <ul>
-                <li>Cabe exclusivamente ao <code>company_admin</code> da empresa cadastrar, revisar permissões e desativar usuários da própria equipe.</li>
+                <li>Cabe exclusivamente ao <code>company_admin</code> da empresa cadastrar, revisar permissões, desativar usuários da própria equipe e atender solicitações de eliminação/anonimização de clientes PF na aba Clientes.</li>
                 <li>A empresa declara possuir base legal válida sob a LGPD para inserir dados de seus clientes, prestadores e notas fiscais na plataforma.</li>
-                <li>Cada usuário é responsável pela guarda de suas credenciais e pelo não compartilhamento de senhas ou códigos OTP.</li>
+                <li>Cada usuário é responsável pela guarda de suas credenciais e códigos OTP.</li>
               </ul>
 
-              <h3>3. Deveres da Plataforma Operadora</h3>
+              <h3>3. Deveres da Operadora e Incidentes (Res. CD/ANPD nº 15/2024)</h3>
               <ul>
-                <li>Manter isolamento lógico estrito por empresa (tenant), criptografia em trânsito (HTTPS/TLS), hash de senhas, mascaramento de CPF nas listagens e registros de auditoria.</li>
-                <li>Notificar o Controlador/empresa contratante em prazo célere caso identifique incidente de segurança relevante envolvendo dados do tenant (Art. 48 da LGPD).</li>
+                <li>Manter isolamento lógico estrito por tenant, criptografia em trânsito (HTTPS/TLS), hash de senhas, mascaramento de CPF e trilha de auditoria persistida por {meta.auditLogRetentionYears} anos.</li>
+                <li>Comunicar a ANPD e os titulares em até <strong>{meta.incidentNotificationBusinessDays} dias úteis</strong> (ou até <strong>{meta.smallAgentNotificationBusinessDays} dias úteis</strong> quando aplicável o regime diferenciado de Agente de Pequeno Porte — Res. CD/ANPD nº 2/2022 e nº 15/2024) caso ocorra incidente com risco ou dano relevante, mantendo registro interno por {meta.incidentRetentionYears} anos e avisando prontamente o Controlador contratante.</li>
               </ul>
 
               <h3>4. Encerramento e Preservação Legal</h3>
               <p>
-                O titular pode desativar e anonimizar sua conta pessoal a qualquer momento (exceto se for o único administrador SaaS ativo), permanecendo resguardados os registros fiscais exigidos por lei por 5 anos (Art. 16, I da LGPD).
+                O titular pode desativar e anonimizar sua conta pessoal a qualquer momento (exceto se for o único administrador SaaS ativo), permanecendo resguardados os registros fiscais exigidos por lei por {meta.fiscalRetentionYears} anos (Art. 16, I da LGPD).
               </p>
             </>
           )}
@@ -123,7 +193,7 @@ export function LegalDocumentsModal({
 
         <footer className="legal-modal-footer">
           <span className="legal-modal-dpo">
-            Canal DPO / Privacidade: <strong>{dpoEmail}</strong>
+            Canal DPO / Privacidade: <strong>{resolvedDpoEmail}</strong>
           </span>
           <button className="legal-modal-close" onClick={onClose} type="button">
             Entendi

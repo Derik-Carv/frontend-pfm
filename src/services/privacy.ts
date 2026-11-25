@@ -8,11 +8,16 @@ export type LegalMetadata = {
     email: string
   }
   fiscalRetentionYears: number
+  auditLogRetentionYears: number
+  incidentRetentionYears: number
+  incidentNotificationBusinessDays: number
+  smallAgentNotificationBusinessDays: number
   otpRetentionHours: number
   rejectedRequestRetentionDays: number
   subprocessors: Array<{
     name: string
     purpose: string
+    mechanism: string
   }>
 }
 
@@ -56,6 +61,26 @@ export type AuditLogItem = {
   ipAddress: string | null
   statusCode: number | null
   createdAt: string
+}
+
+export type SecurityIncident = {
+  id: string
+  title: string
+  description: string
+  severity: 'low' | 'medium' | 'high' | 'critical' | string
+  affectedDataCategories: string
+  affectedSubjectsEstimate: number | null
+  relevantRisk: boolean
+  notifiedAnpd: boolean
+  notifiedAnpdAt: string | null
+  notifiedSubjects: boolean
+  notifiedSubjectsAt: string | null
+  containmentMeasures: string | null
+  status: 'open' | 'mitigated' | 'closed' | string
+  detectedAt: string
+  reportedBy: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 function authHeaders(token: string) {
@@ -124,6 +149,22 @@ export async function anonymizeMyAccount(
   })
 }
 
+export async function anonymizeClient(
+  token: string,
+  clientId: string,
+): Promise<{
+  message: string
+  id: string
+  anonymizedAt: string
+  fiscalRetentionNotice: string
+}> {
+  return apiRequest(`/clients/${clientId}/anonymize`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify({}),
+  })
+}
+
 export async function getAdminAuditLogs(
   token: string,
   params: { page?: number; limit?: number; action?: string } = {},
@@ -148,10 +189,65 @@ export async function triggerLgpdCleanup(token: string): Promise<{
   deletedOtpCodes: number
   scrubbedRequestHashes: number
   deletedRejectedRequests: number
+  deletedExpiredAuditLogs: number
 }> {
   return apiRequest('/admin/lgpd/cleanup', {
     method: 'POST',
     headers: authHeaders(token),
     body: JSON.stringify({}),
+  })
+}
+
+export async function getSecurityIncidents(token: string): Promise<{
+  incidents: SecurityIncident[]
+}> {
+  return apiRequest('/admin/lgpd/incidents', {
+    method: 'GET',
+    headers: authHeaders(token),
+  })
+}
+
+export async function createSecurityIncident(
+  token: string,
+  payload: {
+    title: string
+    description: string
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    affectedDataCategories: string
+    affectedSubjectsEstimate?: number
+    relevantRisk: boolean
+    notifiedAnpd: boolean
+    notifiedSubjects: boolean
+    containmentMeasures?: string
+  },
+): Promise<{
+  message: string
+  incident: SecurityIncident
+}> {
+  return apiRequest('/admin/lgpd/incidents', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function updateSecurityIncident(
+  token: string,
+  incidentId: string,
+  payload: {
+    status?: 'open' | 'mitigated' | 'closed'
+    containmentMeasures?: string
+    relevantRisk?: boolean
+    notifiedAnpd?: boolean
+    notifiedSubjects?: boolean
+  },
+): Promise<{
+  message: string
+  incident: SecurityIncident
+}> {
+  return apiRequest(`/admin/lgpd/incidents/${incidentId}`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
   })
 }
