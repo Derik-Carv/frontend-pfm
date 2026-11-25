@@ -14,6 +14,11 @@ import {
   type CompanyRegistrationRequest,
 } from './services/adminSystem'
 import { createMotherCompany, updateMotherCompany } from './services/companies'
+import {
+  getAdminAuditLogs,
+  triggerLgpdCleanup,
+  type AuditLogItem,
+} from './services/privacy'
 import './PlatformAdmin.css'
 
 type PlatformAdminProps = {
@@ -56,6 +61,10 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([])
+  const [auditTotal, setAuditTotal] = useState(0)
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [cleaningUp, setCleaningUp] = useState(false)
 
   // Modal de nova empresa Mother + Admin Cliente
   const [isCreateMotherOpen, setIsCreateMotherOpen] = useState(false)
@@ -82,16 +91,19 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
       setIsLoading(true)
       setError('')
       try {
-        const [metricsRes, hierarchyRes, requestsRes] = await Promise.all([
+        const [metricsRes, hierarchyRes, requestsRes, auditRes] = await Promise.all([
           getSystemMetrics(token),
           getSystemHierarchy(token),
           getCompanyRequests(token, 'pending'),
+          getAdminAuditLogs(token, { page: 1, limit: 25 }),
         ])
         if (!active) return
         setHealth(metricsRes.data.systemHealth)
         setStats(metricsRes.data.stats)
         setMothers(hierarchyRes.mothers)
         setPendingRequests(requestsRes.requests)
+        setAuditLogs(auditRes.logs)
+        setAuditTotal(auditRes.total)
 
         // Por padrão, se houver apenas uma matriz, já deixa expandida
         if (hierarchyRes.mothers.length === 1) {
@@ -568,6 +580,92 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                 </div>
               )
             })}
+          </div>
+        )}
+      </section>
+
+      {/* GOVERNANÇA & AUDITORIA LGPD */}
+      <section className="platform-hierarchy-section">
+        <div className="platform-section-header">
+          <div>
+            <h2>Governança &amp; Auditoria LGPD</h2>
+            <p className="platform-section-sub">
+              Trilha de auditoria persistida ({auditTotal} eventos) e limpeza automática de retenção (OTPs &gt; 24h e solicitações rejeitadas &gt; 90d).
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="platform-view-clients-btn"
+              disabled={auditLoading}
+              onClick={async () => {
+                setAuditLoading(true)
+                try {
+                  const res = await getAdminAuditLogs(token, { page: 1, limit: 25 })
+                  setAuditLogs(res.logs)
+                  setAuditTotal(res.total)
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Erro ao atualizar logs LGPD.')
+                } finally {
+                  setAuditLoading(false)
+                }
+              }}
+            >
+              {auditLoading ? 'Atualizando...' : '↻ Atualizar Logs'}
+            </button>
+            <button
+              type="button"
+              className="platform-create-btn"
+              disabled={cleaningUp}
+              onClick={async () => {
+                setCleaningUp(true)
+                setError('')
+                setNotice('')
+                try {
+                  const res = await triggerLgpdCleanup(token)
+                  setNotice(
+                    `${res.message} OTPs removidos: ${res.deletedOtpCodes}, hashes limpos: ${res.scrubbedRequestHashes}, rejeições antigas expurgadas: ${res.deletedRejectedRequests}.`,
+                  )
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Erro ao executar limpeza LGPD.')
+                } finally {
+                  setCleaningUp(false)
+                }
+              }}
+            >
+              {cleaningUp ? 'Limpando...' : 'Executar Limpeza de Retenção'}
+            </button>
+          </div>
+        </div>
+
+        {auditLogs.length === 0 ? (
+          <div className="management-empty">Nenhum evento registrado ainda na trilha de auditoria.</div>
+        ) : (
+          <div className="platform-clients-table-scroll">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Ação</th>
+                  <th>Papel</th>
+                  <th>Alvo</th>
+                  <th>Status</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{new Date(log.createdAt).toLocaleString('pt-BR')}</td>
+                    <td><code>{log.action}</code></td>
+                    <td>{log.actorRole || 'público'}</td>
+                    <td>{log.targetTable ? `${log.targetTable}${log.targetId ? ` (${log.targetId.slice(0, 8)}…)` : ''}` : '—'}</td>
+                    <td>{log.statusCode ?? '—'}</td>
+                    <td>{log.ipAddress || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

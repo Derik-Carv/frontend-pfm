@@ -457,6 +457,47 @@
   text-align: center;
 }
 
+.legal-consent-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  background: var(--field-bg);
+  font-size: 12px;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.legal-consent-box input[type="checkbox"] {
+  width: 16px;
+  min-height: 16px;
+  height: 16px;
+  margin-top: 2px;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--forest);
+}
+
+.legal-consent-box .text-button {
+  padding: 0;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.footnote-link {
+  padding: 0;
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .signed-in .submit-button { width: 100%; margin-top: 28px; }
 
 @keyframes rise-in {

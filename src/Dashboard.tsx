@@ -5,6 +5,8 @@ import ManagementPanel from './Management'
 import NfPanel from './NfPanel'
 import { CompanySelector } from './CompanySelector'
 import { CompanyManagementPanel } from './CompanyManagementPanel'
+import { PrivacyPanel } from './PrivacyPanel'
+import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import './Dashboard.css'
 
 type Role = 'administrator' | 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
@@ -205,14 +207,15 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [detail, setDetail] = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
-  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'company' | 'admin'>(
+  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'company' | 'admin' | 'privacy'>(
     isPlatformAdmin ? 'admin' : 'overview',
   )
+  const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
 
   useEffect(() => {
-    if (isPlatformAdmin) {
+    if (isPlatformAdmin && activeArea !== 'privacy') {
       setActiveArea('admin')
-    } else if (activeArea === 'admin') {
+    } else if (!isPlatformAdmin && activeArea === 'admin') {
       setActiveArea('overview')
     }
   }, [isPlatformAdmin])
@@ -466,7 +469,10 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         </a>
         <nav className="dashboard-section-nav" aria-label="Navegação principal">
           {isPlatformAdmin ? (
-            <button aria-current={activeArea === 'admin' ? 'page' : undefined} onClick={() => setActiveArea('admin')} type="button">Central SaaS (Plataforma)</button>
+            <>
+              <button aria-current={activeArea === 'admin' ? 'page' : undefined} onClick={() => setActiveArea('admin')} type="button">Central SaaS (Plataforma)</button>
+              <button aria-current={activeArea === 'privacy' ? 'page' : undefined} onClick={() => setActiveArea('privacy')} type="button">Privacidade (LGPD)</button>
+            </>
           ) : (
             <>
               <button aria-current={activeArea === 'overview' ? 'page' : undefined} onClick={() => setActiveArea('overview')} type="button">Dashboard (BI)</button>
@@ -474,6 +480,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
               <button aria-current={activeArea === 'clients' ? 'page' : undefined} onClick={() => setActiveArea('clients')} type="button">Clientes</button>
               {canAccessNf && <button aria-current={activeArea === 'nf' ? 'page' : undefined} onClick={() => setActiveArea('nf')} type="button">Notas fiscais</button>}
               {canAccessCompanyManagement && <button aria-current={activeArea === 'company' ? 'page' : undefined} onClick={() => setActiveArea('company')} type="button">Minha Empresa</button>}
+              <button aria-current={activeArea === 'privacy' ? 'page' : undefined} onClick={() => setActiveArea('privacy')} type="button">Privacidade (LGPD)</button>
             </>
           )}
         </nav>
@@ -1055,6 +1062,12 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           />
         ) : activeArea === 'admin' && canAccessAdmin ? (
           <AdminPanel onLogout={onLogout} token={token} />
+        ) : activeArea === 'privacy' ? (
+          <PrivacyPanel
+            onLogout={onLogout}
+            onOpenLegal={(doc) => setLegalModalDoc(doc)}
+            token={token}
+          />
         ) : (
           <ManagementPanel
             key={`${activeArea}-${token}-${refreshing}`}
@@ -1066,8 +1079,34 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
           />
         )}
 
-        <footer className="dashboard-footer"><span>DERIK FLASH</span><span>BUSINESS INTELLIGENCE & ANALYTICS</span></footer>
+        <footer className="dashboard-footer">
+          <span>DERIK FLASH · CONFORMIDADE LGPD (DPO: privacidade@derikdev.cloud)</span>
+          <span style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            <button
+              className="text-button"
+              onClick={() => setLegalModalDoc('privacy')}
+              style={{ color: 'inherit', fontSize: 'inherit' }}
+              type="button"
+            >
+              Política de Privacidade
+            </button>
+            <button
+              className="text-button"
+              onClick={() => setLegalModalDoc('terms')}
+              style={{ color: 'inherit', fontSize: 'inherit' }}
+              type="button"
+            >
+              Termos de Uso
+            </button>
+          </span>
+        </footer>
       </div>
+      {legalModalDoc && (
+        <LegalDocumentsModal
+          initialDoc={legalModalDoc}
+          onClose={() => setLegalModalDoc(null)}
+        />
+      )}
     </main>
   )
 }

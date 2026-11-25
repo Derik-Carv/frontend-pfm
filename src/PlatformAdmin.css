@@ -534,3 +534,9 @@
     padding-left: 14px;
   }
 }
+
+.platform-section-sub {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted, #9fb8ae);
+}

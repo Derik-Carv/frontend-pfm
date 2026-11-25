@@ -1,0 +1,125 @@
+.legal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.legal-modal {
+  width: min(760px, 100%);
+  max-height: 86vh;
+  background: var(--surface, #0f241e);
+  color: var(--text, #e6f2ed);
+  border: 1px solid var(--border, rgba(16, 185, 129, 0.25));
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.legal-modal-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border, rgba(16, 185, 129, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.legal-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.legal-modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 22px 0;
+  border-bottom: 1px solid var(--border, rgba(16, 185, 129, 0.16));
+}
+
+.legal-modal-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted, #9fb8ae);
+  padding: 8px 12px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.legal-modal-tab.is-active {
+  color: #10b981;
+  border-bottom-color: #10b981;
+}
+
+.legal-modal-body {
+  padding: 20px 22px;
+  overflow-y: auto;
+  line-height: 1.62;
+  font-size: 0.92rem;
+}
+
+.legal-modal-body h3 {
+  margin: 18px 0 6px;
+  font-size: 0.98rem;
+  color: #10b981;
+}
+
+.legal-modal-body h3:first-child {
+  margin-top: 0;
+}
+
+.legal-modal-body p,
+.legal-modal-body li {
+  color: var(--text, #e6f2ed);
+  margin: 6px 0;
+}
+
+.legal-modal-body ul {
+  padding-left: 20px;
+  margin: 6px 0 12px;
+}
+
+.legal-modal-meta {
+  display: inline-block;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.legal-modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border, rgba(16, 185, 129, 0.18));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.legal-modal-dpo {
+  font-size: 0.82rem;
+  color: var(--muted, #9fb8ae);
+}
+
+.legal-modal-close {
+  border: 1px solid var(--border, rgba(16, 185, 129, 0.3));
+  background: rgba(16, 185, 129, 0.14);
+  color: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}

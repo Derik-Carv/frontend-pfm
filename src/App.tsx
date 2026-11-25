@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { apiRequest, clearTenantContext } from './services/api'
+import { acceptLegalDocuments } from './services/privacy'
+import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import Dashboard from './Dashboard'
 import './App.css'
 
@@ -16,6 +18,8 @@ type CompanyRequestDraft = {
   adminEmail: string
   adminCpf: string
   adminPassword: string
+  acceptedTerms: true
+  acceptedPrivacy: true
 }
 
 type CompanyRequestResponse = {
@@ -39,6 +43,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [token, setToken] = useState(() => localStorage.getItem('token'))
   const [passwordChangeRequired, setPasswordChangeRequired] = useState(() => localStorage.getItem('passwordChangeRequired') === 'true')
+  const [legalAcceptanceRequired, setLegalAcceptanceRequired] = useState(() => localStorage.getItem('legalAcceptanceRequired') === 'true')
+  const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
+  const [legalAgreeChecked, setLegalAgreeChecked] = useState(false)
 
   // Fluxo de solicitação de empresa em 2 etapas (dados -> código OTP no e-mail do admin)
   const [registerStep, setRegisterStep] = useState<'form' | 'code'>('form')
@@ -69,7 +76,12 @@ function App() {
     const password = String(formData.get('password') ?? '')
 
     try {
-      const result = await apiRequest<{ message: string; token: string; passwordChangeRequired: boolean }>(
+      const result = await apiRequest<{
+        message: string
+        token: string
+        passwordChangeRequired: boolean
+        legalAcceptanceRequired?: boolean
+      }>(
         '/public/login',
         {
           method: 'POST',
@@ -82,9 +94,15 @@ function App() {
       setUsername(loginUsername)
       setPasswordChangeRequired(result.passwordChangeRequired)
       localStorage.setItem('passwordChangeRequired', String(result.passwordChangeRequired))
+      const needsLegal = Boolean(result.legalAcceptanceRequired)
+      setLegalAcceptanceRequired(needsLegal)
+      localStorage.setItem('legalAcceptanceRequired', String(needsLegal))
+      setLegalAgreeChecked(false)
       showMessage(result.passwordChangeRequired
         ? 'Por segurança, defina uma nova senha antes de acessar o painel.'
-        : 'Login realizado com sucesso.')
+        : needsLegal
+          ? 'Confirme a leitura dos Termos de Uso e Política de Privacidade (LGPD).'
+          : 'Login realizado com sucesso.')
     } catch (error) {
       showMessage(
         error instanceof Error ? error.message : 'Não foi possível entrar.',
@@ -102,6 +120,12 @@ function App() {
 
     const formData = new FormData(event.currentTarget)
     const phoneVal = String(formData.get('phone') ?? '').trim()
+    const acceptedLegal = formData.get('acceptedLegal') === 'on'
+    if (!acceptedLegal) {
+      setIsLoading(false)
+      showMessage('É obrigatório aceitar os Termos de Uso e a Política de Privacidade (LGPD).', true)
+      return
+    }
     const draft: CompanyRequestDraft = {
       registeredCompanyName: String(formData.get('registeredCompanyName') ?? '').trim(),
       tradeName: String(formData.get('tradeName') ?? '').trim(),
@@ -112,6 +136,8 @@ function App() {
       adminEmail: String(formData.get('adminEmail') ?? '').trim().toLowerCase(),
       adminCpf: String(formData.get('adminCpf') ?? '').trim(),
       adminPassword: String(formData.get('adminPassword') ?? ''),
+      acceptedTerms: true,
+      acceptedPrivacy: true,
     }
 
     try {
@@ -318,11 +344,34 @@ function App() {
     clearTenantContext()
     localStorage.removeItem('token')
     localStorage.removeItem('passwordChangeRequired')
+    localStorage.removeItem('legalAcceptanceRequired')
     setToken(null)
     setPasswordChangeRequired(false)
+    setLegalAcceptanceRequired(false)
     setScreen('login')
     showMessage('Você saiu da sua conta.')
   }, [])
+
+  async function handleAcceptLegalGate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!token || !legalAgreeChecked) return
+    setIsLoading(true)
+    showMessage('')
+    try {
+      await acceptLegalDocuments(token)
+      setLegalAcceptanceRequired(false)
+      localStorage.setItem('legalAcceptanceRequired', 'false')
+      showMessage('Aceite registrado com sucesso.')
+    } catch (error) {
+      if (error instanceof Error && 'status' in error && error.status === 401) {
+        handleLogout()
+        return
+      }
+      showMessage(error instanceof Error ? error.message : 'Não foi possível registrar o aceite.', true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const headingEyebrow = screen === 'login'
     ? 'BEM-VINDO DE VOLTA'
@@ -346,9 +395,53 @@ function App() {
           ? 'Informe seu e-mail cadastrado para receber o código de recuperação.'
           : `Digite o código enviado para ${forgotEmail} e escolha a nova senha.`)
 
-  return token && !passwordChangeRequired ? (
-    <Dashboard onLogout={handleLogout} onThemeChange={setTheme} theme={theme} token={token} />
-  ) : token ? (
+  return (
+    <>
+      {token && !passwordChangeRequired && !legalAcceptanceRequired ? (
+        <Dashboard onLogout={handleLogout} onThemeChange={setTheme} theme={theme} token={token} />
+      ) : token && !passwordChangeRequired && legalAcceptanceRequired ? (
+        <main className="auth-shell">
+          <div className="theme-switch" role="group" aria-label="Tema da tela">
+            <button aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')} type="button">Escuro</button>
+            <button aria-pressed={theme === 'light'} onClick={() => setTheme('light')} type="button">Claro</button>
+          </div>
+          <section className="form-panel">
+            <div className="form-wrap">
+              <div className="form-heading">
+                <p className="eyebrow">CONFORMIDADE LGPD</p>
+                <h2>Termos e Privacidade</h2>
+                <p>Para continuar usando o painel, confirme ciência da Política de Privacidade e dos Termos de Uso vigentes.</p>
+              </div>
+              <form className="auth-form" onSubmit={handleAcceptLegalGate}>
+                <label className="legal-consent-box">
+                  <input
+                    checked={legalAgreeChecked}
+                    onChange={(e) => setLegalAgreeChecked(e.target.checked)}
+                    required
+                    type="checkbox"
+                  />
+                  <span>
+                    Li e aceito os{' '}
+                    <button className="text-button" onClick={() => setLegalModalDoc('terms')} type="button">
+                      Termos de Uso &amp; DPA
+                    </button>{' '}
+                    e a{' '}
+                    <button className="text-button" onClick={() => setLegalModalDoc('privacy')} type="button">
+                      Política de Privacidade (LGPD)
+                    </button>.
+                  </span>
+                </label>
+                <button className="submit-button" disabled={isLoading || !legalAgreeChecked} type="submit">
+                  {isLoading ? 'Registrando aceite...' : 'Aceitar e acessar o painel'}
+                  <span aria-hidden="true">→</span>
+                </button>
+              </form>
+              {message && <p className={`form-message${isError ? ' is-error' : ''}`} role="status">{message}</p>}
+              <button className="text-button password-logout" onClick={handleLogout} type="button">Sair</button>
+            </div>
+          </section>
+        </main>
+      ) : token ? (
     <main className="auth-shell">
       <div className="theme-switch" role="group" aria-label="Tema da tela">
         <button aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')} type="button">Escuro</button>
@@ -495,6 +588,19 @@ function App() {
                         <input autoComplete="new-password" defaultValue={companyDraft?.adminPassword ?? ''} id="req-admin-password" minLength={8} name="adminPassword" placeholder="Mínimo 8 caracteres" required type="password" />
                       </div>
                     </div>
+                    <label className="legal-consent-box">
+                      <input defaultChecked={Boolean(companyDraft?.acceptedTerms)} name="acceptedLegal" required type="checkbox" />
+                      <span>
+                        Li e concordo com os{' '}
+                        <button className="text-button" onClick={() => setLegalModalDoc('terms')} type="button">
+                          Termos de Uso &amp; DPA
+                        </button>{' '}
+                        e a{' '}
+                        <button className="text-button" onClick={() => setLegalModalDoc('privacy')} type="button">
+                          Política de Privacidade (LGPD)
+                        </button>.
+                      </span>
+                    </label>
                     <button className="submit-button" disabled={isLoading} type="submit">
                       {isLoading ? 'Enviando código...' : 'Enviar código para o e-mail'}
                       <span aria-hidden="true">→</span>
@@ -646,10 +752,28 @@ function App() {
                 </button>
               </p>
           </>
-          <p className="form-footnote">© 2026 Derik Flash · Suas informações são tratadas com cuidado.</p>
+          <p className="form-footnote">
+            © 2026 Derik Flash ·{' '}
+            <button className="text-button footnote-link" onClick={() => setLegalModalDoc('privacy')} type="button">
+              Política de Privacidade
+            </button>{' '}
+            ·{' '}
+            <button className="text-button footnote-link" onClick={() => setLegalModalDoc('terms')} type="button">
+              Termos de Uso
+            </button>{' '}
+            · DPO: privacidade@derikdev.cloud
+          </p>
         </div>
       </section>
     </main>
+  )}
+      {legalModalDoc && (
+        <LegalDocumentsModal
+          initialDoc={legalModalDoc}
+          onClose={() => setLegalModalDoc(null)}
+        />
+      )}
+    </>
   )
 }
 
