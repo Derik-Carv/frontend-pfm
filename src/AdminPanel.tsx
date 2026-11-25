@@ -61,6 +61,7 @@ const fieldsByTable: Record<AdminTable, FieldDefinition[]> = {
     { key: 'name', label: 'Nome', required: true },
     { key: 'surname', label: 'Sobrenome', required: true },
     { key: 'username', label: 'Usuário', required: true },
+    { key: 'email', label: 'E-mail', placeholder: 'usuario@empresa.com' },
     { key: 'password', label: 'Senha', type: 'password', required: true, help: 'Na edição, deixe vazio para manter a senha atual.' },
     { key: 'roleId', label: 'Perfil', required: true },
     { key: 'cpf', label: 'CPF', required: true },

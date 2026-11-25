@@ -78,6 +78,89 @@
   letter-spacing: 0.6px;
 }
 
+.platform-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.platform-request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.platform-request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.platform-request-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.platform-request-title strong {
+  color: var(--heading);
+  font-size: 14px;
+}
+
+.platform-request-title small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.platform-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgb(245 158 11 / 16%);
+  color: #f59e0b;
+  border: 1px solid rgb(245 158 11 / 35%);
+}
+
+.platform-request-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.platform-request-meta strong {
+  color: var(--ink);
+}
+
+.platform-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.branch-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
 /* 1. Cards de Métricas e Telemetria */
 .platform-metrics-grid {
   display: grid;

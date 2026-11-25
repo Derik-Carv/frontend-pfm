@@ -167,9 +167,11 @@ export function CompanyManagementPanel({
     try {
       if (editingUser) {
         const passwordVal = String(formData.get('password') ?? '').trim()
+        const emailVal = String(formData.get('email') ?? '').trim().toLowerCase()
         await updateCompanyUser(token, editingUser.id, {
           name: String(formData.get('name') ?? '').trim(),
           surname: String(formData.get('surname') ?? '').trim(),
+          ...(emailVal ? { email: emailVal } : {}),
           roleName: userRoleInput,
           companyId: userCompanyInput || undefined,
           ...(passwordVal ? { password: passwordVal } : {}),
@@ -180,6 +182,7 @@ export function CompanyManagementPanel({
         const res = await createCompanyUser(token, {
           name: String(formData.get('name') ?? '').trim(),
           surname: String(formData.get('surname') ?? '').trim(),
+          email: String(formData.get('email') ?? '').trim().toLowerCase(),
           cpf: String(formData.get('cpf') ?? '').trim(),
           password: String(formData.get('password') ?? ''),
           roleName: userRoleInput,
@@ -351,6 +354,7 @@ export function CompanyManagementPanel({
                   <tr>
                     <th>Usuário</th>
                     <th>Nome</th>
+                    <th>E-mail</th>
                     <th>Perfil</th>
                     <th>Unidade</th>
                     <th>Status</th>
@@ -362,6 +366,7 @@ export function CompanyManagementPanel({
                     <tr key={u.id}>
                       <td><strong>{u.username}</strong></td>
                       <td>{u.name} {u.surname}</td>
+                      <td>{u.email || 'Sem e-mail'}</td>
                       <td>{roleLabels[u.roleName] || u.roleName}</td>
                       <td>{u.companyName || 'Matriz'}</td>
                       <td>
@@ -476,6 +481,16 @@ export function CompanyManagementPanel({
               <label>
                 Sobrenome *
                 <input name="surname" required defaultValue={editingUser?.surname ?? ''} />
+              </label>
+              <label>
+                E-mail *
+                <input
+                  name="email"
+                  type="email"
+                  required={!editingUser}
+                  defaultValue={editingUser?.email ?? ''}
+                  placeholder="usuario@empresa.com"
+                />
               </label>
               {!editingUser && (
                 <label>

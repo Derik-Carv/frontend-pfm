@@ -3,11 +3,15 @@ import {
   getSystemMetrics,
   getSystemHierarchy,
   getAdminCompanyClients,
+  getCompanyRequests,
+  approveCompanyRequest,
+  rejectCompanyRequest,
   type SystemHealth,
   type SystemStats,
   type HierarchyMother,
   type HierarchyBranch,
   type AdminClient,
+  type CompanyRegistrationRequest,
 } from './services/adminSystem'
 import { createMotherCompany, updateMotherCompany } from './services/companies'
 import './PlatformAdmin.css'
@@ -44,6 +48,10 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
   const [health, setHealth] = useState<SystemHealth | null>(null)
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [mothers, setMothers] = useState<HierarchyMother[]>([])
+  const [pendingRequests, setPendingRequests] = useState<CompanyRegistrationRequest[]>([])
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [rejectingRequest, setRejectingRequest] = useState<CompanyRegistrationRequest | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -74,14 +82,16 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
       setIsLoading(true)
       setError('')
       try {
-        const [metricsRes, hierarchyRes] = await Promise.all([
+        const [metricsRes, hierarchyRes, requestsRes] = await Promise.all([
           getSystemMetrics(token),
           getSystemHierarchy(token),
+          getCompanyRequests(token, 'pending'),
         ])
         if (!active) return
         setHealth(metricsRes.data.systemHealth)
         setStats(metricsRes.data.stats)
         setMothers(hierarchyRes.mothers)
+        setPendingRequests(requestsRes.requests)
 
         // Por padrão, se houver apenas uma matriz, já deixa expandida
         if (hierarchyRes.mothers.length === 1) {
@@ -157,6 +167,7 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
     const formData = new FormData(event.currentTarget)
     const adminName = String(formData.get('adminName') ?? '').trim()
     const adminSurname = String(formData.get('adminSurname') ?? '').trim()
+    const adminEmail = String(formData.get('adminEmail') ?? '').trim().toLowerCase()
     const adminCpf = String(formData.get('adminCpf') ?? '').trim()
     const adminPassword = String(formData.get('adminPassword') ?? '')
     const adminUsername = String(formData.get('adminUsername') ?? '').trim()
@@ -168,11 +179,12 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
         cnpj: String(formData.get('cnpj') ?? '').trim(),
         email: String(formData.get('email') ?? '').trim() || undefined,
         phone: String(formData.get('phone') ?? '').trim() || undefined,
-        ...(adminName && adminCpf && adminPassword
+        ...(adminName && adminEmail && adminCpf && adminPassword
           ? {
               admin: {
                 name: adminName,
                 surname: adminSurname || 'Administrador',
+                email: adminEmail,
                 cpf: adminCpf,
                 password: adminPassword,
                 ...(adminUsername ? { username: adminUsername } : {}),
@@ -205,6 +217,42 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
       setRefreshKey((k) => k + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível alterar o status da empresa.')
+    }
+  }
+
+  async function handleApproveRequest(req: CompanyRegistrationRequest) {
+    setReviewingId(req.id)
+    setError('')
+    setNotice('')
+    try {
+      const res = await approveCompanyRequest(token, req.id)
+      setNotice(
+        `Empresa "${res.company.tradeName}" aprovada! Admin criado: ${res.adminUser.username} (${res.adminUser.email})`,
+      )
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível aprovar a solicitação.')
+    } finally {
+      setReviewingId(null)
+    }
+  }
+
+  async function handleRejectSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!rejectingRequest) return
+    setReviewingId(rejectingRequest.id)
+    setError('')
+    setNotice('')
+    try {
+      await rejectCompanyRequest(token, rejectingRequest.id, rejectReason.trim())
+      setNotice(`Solicitação da empresa "${rejectingRequest.tradeName}" recusada.`)
+      setRejectingRequest(null)
+      setRejectReason('')
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível recusar a solicitação.')
+    } finally {
+      setReviewingId(null)
     }
   }
 
@@ -326,7 +374,67 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
         </div>
       </section>
 
-      {/* 2. ÁRVORE EM CASCATA: MATRIZ -> FILIAIS */}
+      {/* 2. FILA DE SOLICITAÇÕES DE CADASTRO PENDENTES */}
+      <section className="platform-cascade-section">
+        <div className="platform-cascade-header">
+          <div>
+            <p className="dashboard-card-index">APROVAÇÃO DE ONBOARDING</p>
+            <h3>Solicitações de Cadastro Pendentes</h3>
+          </div>
+          <span className="platform-cascade-count">
+            {pendingRequests.length} {pendingRequests.length === 1 ? 'Pendente' : 'Pendentes'}
+          </span>
+        </div>
+
+        {!pendingRequests.length ? (
+          <div className="management-empty" style={{ padding: '20px 10px' }}>
+            Nenhuma solicitação aguardando aprovação no momento.
+          </div>
+        ) : (
+          <div className="platform-requests-list">
+            {pendingRequests.map((req) => (
+              <div className="platform-request-card" key={req.id}>
+                <div className="platform-request-info">
+                  <div className="platform-request-title">
+                    <span className="platform-pending-badge">Pendente</span>
+                    <strong>{req.tradeName}</strong>
+                    <small>CNPJ: {req.cnpj}</small>
+                  </div>
+                  <p className="platform-request-meta">
+                    Razão Social: <strong>{req.registeredCompanyName}</strong>
+                  </p>
+                  <p className="platform-request-meta">
+                    Responsável: <strong>{req.adminName} {req.adminSurname}</strong> · E-mail: <strong>{req.adminEmail}</strong> (verificado) · CPF: {req.adminCpf}
+                  </p>
+                </div>
+                <div className="platform-request-actions">
+                  <button
+                    type="button"
+                    className="management-primary"
+                    disabled={reviewingId === req.id}
+                    onClick={() => void handleApproveRequest(req)}
+                  >
+                    {reviewingId === req.id ? 'Processando...' : '✓ Aprovar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="management-secondary"
+                    disabled={reviewingId === req.id}
+                    onClick={() => {
+                      setRejectReason('')
+                      setRejectingRequest(req)
+                    }}
+                  >
+                    ✕ Recusar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 3. ÁRVORE EM CASCATA: MATRIZ -> FILIAIS */}
       <section className="platform-cascade-section">
         <div className="platform-cascade-header">
           <div>
@@ -590,6 +698,10 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                   <input name="adminSurname" required placeholder="Ex.: Silva" />
                 </label>
               </div>
+              <label>
+                E-mail do Admin *
+                <input name="adminEmail" type="email" required placeholder="admin@empresa.com" />
+              </label>
               <div className="platform-form-pair">
                 <label>
                   CPF do Admin *
@@ -619,6 +731,57 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                 </button>
                 <button type="submit" className="management-primary" disabled={isCreatingMother}>
                   {isCreatingMother ? 'Cadastrando...' : 'Criar Empresa + Admin'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* 5. MODAL: RECUSA DE SOLICITAÇÃO */}
+      {rejectingRequest && (
+        <div className="branch-modal-backdrop" onClick={() => setRejectingRequest(null)}>
+          <div className="branch-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="branch-modal-header">
+              <div>
+                <p className="dashboard-card-index">RECUSAR SOLICITAÇÃO</p>
+                <h3>{rejectingRequest.tradeName}</h3>
+              </div>
+              <button
+                type="button"
+                className="branch-modal-close"
+                onClick={() => setRejectingRequest(null)}
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </div>
+            <form className="branch-form" onSubmit={handleRejectSubmit}>
+              <label>
+                Motivo da recusa *
+                <textarea
+                  rows={3}
+                  required
+                  minLength={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Explique o motivo que será enviado ao solicitante por e-mail"
+                />
+              </label>
+              <div className="branch-form-actions">
+                <button
+                  type="button"
+                  className="management-secondary"
+                  onClick={() => setRejectingRequest(null)}
+                  disabled={reviewingId === rejectingRequest.id}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="management-primary"
+                  disabled={reviewingId === rejectingRequest.id}
+                >
+                  {reviewingId === rejectingRequest.id ? 'Recusando...' : 'Confirmar recusa'}
                 </button>
               </div>
             </form>

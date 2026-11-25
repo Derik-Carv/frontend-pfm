@@ -298,6 +298,42 @@
   font-weight: 700;
 }
 
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.auth-forgot-btn {
+  font-size: 12px;
+}
+
+.auth-code-input {
+  text-align: center;
+  letter-spacing: 0.35em;
+  font-size: 20px !important;
+  font-weight: 700;
+}
+
+.auth-secondary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.auth-section-caption {
+  margin: 12px 0 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--field-border);
+  color: var(--clay);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
 .auth-form input {
   width: 100%;
   min-height: 48px;

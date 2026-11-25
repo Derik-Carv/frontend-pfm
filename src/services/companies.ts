@@ -36,6 +36,7 @@ export type CreateMotherPayload = {
   admin?: {
     name: string
     surname: string
+    email: string
     cpf: string
     password: string
     username?: string
@@ -55,6 +56,7 @@ export type CompanyUser = {
   name: string
   surname: string
   username: string
+  email?: string | null
   cpf: string
   roleId: string
   roleName: 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
@@ -68,6 +70,7 @@ export type CompanyUser = {
 export type CreateCompanyUserPayload = {
   name: string
   surname: string
+  email: string
   cpf: string
   password: string
   roleName: 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator'
@@ -78,6 +81,7 @@ export type CreateCompanyUserPayload = {
 export type UpdateCompanyUserPayload = {
   name?: string
   surname?: string
+  email?: string
   roleName?: 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator'
   companyId?: string
   active?: boolean

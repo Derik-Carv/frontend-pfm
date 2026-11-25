@@ -3,12 +3,29 @@ import { apiRequest, clearTenantContext } from './services/api'
 import Dashboard from './Dashboard'
 import './App.css'
 
-type Screen = 'login' | 'register'
+type Screen = 'login' | 'register' | 'forgot'
 type Theme = 'dark' | 'light'
 
-type RegisterResponse = {
+type CompanyRequestDraft = {
+  registeredCompanyName: string
+  tradeName: string
+  cnpj: string
+  phone?: string
+  adminName: string
+  adminSurname: string
+  adminEmail: string
+  adminCpf: string
+  adminPassword: string
+}
+
+type CompanyRequestResponse = {
   message: string
-  user: { username: string }
+  request: {
+    id: string
+    tradeName: string
+    adminEmail: string
+    status: string
+  }
 }
 
 function App() {
@@ -22,6 +39,15 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [token, setToken] = useState(() => localStorage.getItem('token'))
   const [passwordChangeRequired, setPasswordChangeRequired] = useState(() => localStorage.getItem('passwordChangeRequired') === 'true')
+
+  // Fluxo de solicitação de empresa em 2 etapas (dados -> código OTP no e-mail do admin)
+  const [registerStep, setRegisterStep] = useState<'form' | 'code'>('form')
+  const [companyDraft, setCompanyDraft] = useState<CompanyRequestDraft | null>(null)
+  const [registerCode, setRegisterCode] = useState('')
+
+  // Fluxo de recuperação de senha em 2 etapas (e-mail -> código OTP + nova senha)
+  const [forgotStep, setForgotStep] = useState<'email' | 'reset'>('email')
+  const [forgotEmail, setForgotEmail] = useState('')
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -69,31 +95,174 @@ function App() {
     }
   }
 
-  async function handleRegister(event: FormEvent<HTMLFormElement>) {
+  async function handleRequestCompanyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
     showMessage('')
 
     const formData = new FormData(event.currentTarget)
-    const registration = {
-      name: String(formData.get('name') ?? '').trim(),
-      surname: String(formData.get('surname') ?? '').trim(),
-      username: String(formData.get('username') ?? '').trim(),
-      password: String(formData.get('password') ?? ''),
-      cpf: String(formData.get('cpf') ?? '').trim(),
+    const phoneVal = String(formData.get('phone') ?? '').trim()
+    const draft: CompanyRequestDraft = {
+      registeredCompanyName: String(formData.get('registeredCompanyName') ?? '').trim(),
+      tradeName: String(formData.get('tradeName') ?? '').trim(),
+      cnpj: String(formData.get('cnpj') ?? '').trim(),
+      ...(phoneVal ? { phone: phoneVal } : {}),
+      adminName: String(formData.get('adminName') ?? '').trim(),
+      adminSurname: String(formData.get('adminSurname') ?? '').trim(),
+      adminEmail: String(formData.get('adminEmail') ?? '').trim().toLowerCase(),
+      adminCpf: String(formData.get('adminCpf') ?? '').trim(),
+      adminPassword: String(formData.get('adminPassword') ?? ''),
     }
 
     try {
-      const result = await apiRequest<RegisterResponse>('/public/register', {
+      await apiRequest<{ message: string; expiresInMinutes: number }>('/public/company-requests/request-code', {
         method: 'POST',
-        body: JSON.stringify(registration),
+        body: JSON.stringify({
+          email: draft.adminEmail,
+          cnpj: draft.cnpj,
+          name: draft.adminName,
+        }),
       })
-      setUsername(result.user.username)
-      setScreen('login')
-      showMessage(`Conta criada. Seu usuário para entrar é ${result.user.username}.`)
+      setCompanyDraft(draft)
+      setRegisterCode('')
+      setRegisterStep('code')
+      showMessage(`Código de verificação enviado para ${draft.adminEmail}. Válido por 15 minutos.`)
     } catch (error) {
       showMessage(
-        error instanceof Error ? error.message : 'Não foi possível criar a conta.',
+        error instanceof Error ? error.message : 'Não foi possível enviar o código de verificação.',
+        true,
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleResendCompanyCode() {
+    if (!companyDraft) return
+    setIsLoading(true)
+    showMessage('')
+    try {
+      await apiRequest<{ message: string; expiresInMinutes: number }>('/public/company-requests/request-code', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: companyDraft.adminEmail,
+          cnpj: companyDraft.cnpj,
+          name: companyDraft.adminName,
+        }),
+      })
+      showMessage(`Novo código enviado para ${companyDraft.adminEmail}.`)
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : 'Não foi possível reenviar o código.',
+        true,
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleSubmitCompanyRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!companyDraft) return
+    setIsLoading(true)
+    showMessage('')
+
+    try {
+      await apiRequest<CompanyRequestResponse>('/public/company-requests', {
+        method: 'POST',
+        body: JSON.stringify({ ...companyDraft, code: registerCode.trim() }),
+      })
+      setUsername(companyDraft.adminEmail)
+      setCompanyDraft(null)
+      setRegisterCode('')
+      setRegisterStep('form')
+      setScreen('login')
+      showMessage('Solicitação enviada! Seu cadastro está aguardando aprovação do administrador da plataforma. Você receberá um e-mail assim que for aprovado.')
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : 'Não foi possível validar o código ou enviar a solicitação.',
+        true,
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleForgotSendCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsLoading(true)
+    showMessage('')
+
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get('email') ?? '').trim().toLowerCase()
+
+    try {
+      const result = await apiRequest<{ message: string; expiresInMinutes: number }>('/public/password/forgot', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+      setForgotEmail(email)
+      setForgotStep('reset')
+      showMessage(result.message)
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : 'Não foi possível solicitar o código.',
+        true,
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleResendForgotCode() {
+    if (!forgotEmail) return
+    setIsLoading(true)
+    showMessage('')
+    try {
+      const result = await apiRequest<{ message: string; expiresInMinutes: number }>('/public/password/forgot', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+      showMessage(result.message)
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : 'Não foi possível reenviar o código.',
+        true,
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsLoading(true)
+    showMessage('')
+
+    const formData = new FormData(event.currentTarget)
+    const code = String(formData.get('code') ?? '').trim()
+    const newPassword = String(formData.get('newPassword') ?? '')
+    const confirmPassword = String(formData.get('confirmPassword') ?? '')
+
+    if (newPassword !== confirmPassword) {
+      showMessage('A confirmação não corresponde à nova senha.', true)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      await apiRequest<{ message: string }>('/public/password/reset', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail, code, newPassword }),
+      })
+      setUsername(forgotEmail)
+      setForgotEmail('')
+      setForgotStep('email')
+      setScreen('login')
+      showMessage('Senha redefinida com sucesso. Já pode entrar com a nova senha.')
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : 'Não foi possível redefinir a senha.',
         true,
       )
     } finally {
@@ -155,6 +324,28 @@ function App() {
     showMessage('Você saiu da sua conta.')
   }, [])
 
+  const headingEyebrow = screen === 'login'
+    ? 'BEM-VINDO DE VOLTA'
+    : screen === 'register'
+      ? (registerStep === 'form' ? 'SOLICITAÇÃO EMPRESARIAL' : 'CONFIRMAÇÃO POR E-MAIL')
+      : 'RECUPERAÇÃO DE ACESSO'
+
+  const headingTitle = screen === 'login'
+    ? 'Entre na sua conta'
+    : screen === 'register'
+      ? (registerStep === 'form' ? 'Solicitar cadastro' : 'Valide seu e-mail')
+      : 'Redefinir senha'
+
+  const headingSubtitle = screen === 'login'
+    ? 'Acesse seu espaço financeiro.'
+    : screen === 'register'
+      ? (registerStep === 'form'
+          ? 'Cadastre os dados da sua empresa e do administrador responsável. O acesso é liberado após aprovação do Admin SaaS.'
+          : `Digite o código enviado para ${companyDraft?.adminEmail || 'seu e-mail'} para enviar a solicitação.`)
+      : (forgotStep === 'email'
+          ? 'Informe seu e-mail cadastrado para receber o código de recuperação.'
+          : `Digite o código enviado para ${forgotEmail} e escolha a nova senha.`)
+
   return token && !passwordChangeRequired ? (
     <Dashboard onLogout={handleLogout} onThemeChange={setTheme} theme={theme} token={token} />
   ) : token ? (
@@ -210,24 +401,37 @@ function App() {
         <div className="form-wrap">
           <>
               <div className="form-heading">
-                <p className="eyebrow">{screen === 'login' ? 'BEM-VINDO DE VOLTA' : 'COMECE POR AQUI'}</p>
-                <h2>{screen === 'login' ? 'Entre na sua conta' : 'Crie sua conta'}</h2>
-                <p>{screen === 'login' ? 'Acesse seu espaço financeiro.' : 'Leva só alguns instantes.'}</p>
+                <p className="eyebrow">{headingEyebrow}</p>
+                <h2>{headingTitle}</h2>
+                <p>{headingSubtitle}</p>
               </div>
 
               {screen === 'login' ? (
                 <form className="auth-form" onSubmit={handleLogin}>
-                  <label htmlFor="login-username">Usuário</label>
+                  <label htmlFor="login-username">Usuário ou e-mail</label>
                   <input
                     autoComplete="username"
                     id="login-username"
                     name="username"
                     onChange={(event) => setUsername(event.target.value)}
-                    placeholder="seu.usuario"
+                    placeholder="seu.usuario ou email@exemplo.com"
                     required
                     value={username}
                   />
-                  <label htmlFor="login-password">Senha</label>
+                  <div className="auth-label-row">
+                    <label htmlFor="login-password">Senha</label>
+                    <button
+                      className="text-button auth-forgot-btn"
+                      onClick={() => {
+                        setScreen('forgot')
+                        setForgotStep('email')
+                        showMessage('')
+                      }}
+                      type="button"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
                   <input
                     autoComplete="current-password"
                     id="login-password"
@@ -242,28 +446,172 @@ function App() {
                     <span aria-hidden="true">→</span>
                   </button>
                 </form>
-              ) : (
-                <form className="auth-form register-form" onSubmit={handleRegister}>
-                  <div className="field-row">
-                    <div className="field-group">
-                      <label htmlFor="register-name">Nome</label>
-                      <input autoComplete="given-name" id="register-name" maxLength={100} minLength={2} name="name" required />
+              ) : screen === 'register' ? (
+                registerStep === 'form' ? (
+                  <form className="auth-form register-form" onSubmit={handleRequestCompanyCode}>
+                    <p className="auth-section-caption">Dados da Empresa</p>
+                    <label htmlFor="req-registered-name">Razão Social *</label>
+                    <input
+                      defaultValue={companyDraft?.registeredCompanyName ?? ''}
+                      id="req-registered-name"
+                      minLength={2}
+                      name="registeredCompanyName"
+                      placeholder="Ex.: Empresa Alpha Serviços LTDA"
+                      required
+                    />
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label htmlFor="req-trade-name">Nome Fantasia *</label>
+                        <input defaultValue={companyDraft?.tradeName ?? ''} id="req-trade-name" minLength={2} name="tradeName" placeholder="Ex.: Alpha Serviços" required />
+                      </div>
+                      <div className="field-group">
+                        <label htmlFor="req-cnpj">CNPJ *</label>
+                        <input defaultValue={companyDraft?.cnpj ?? ''} id="req-cnpj" maxLength={18} name="cnpj" placeholder="00.000.000/0000-00" required />
+                      </div>
                     </div>
-                    <div className="field-group">
-                      <label htmlFor="register-surname">Sobrenome</label>
-                      <input autoComplete="family-name" id="register-surname" maxLength={100} minLength={2} name="surname" required />
+                    <label htmlFor="req-phone">Telefone da Empresa (Opcional)</label>
+                    <input defaultValue={companyDraft?.phone ?? ''} id="req-phone" name="phone" placeholder="(11) 99999-9999" />
+
+                    <p className="auth-section-caption">Administrador Responsável</p>
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label htmlFor="req-admin-name">Nome *</label>
+                        <input autoComplete="given-name" defaultValue={companyDraft?.adminName ?? ''} id="req-admin-name" minLength={2} name="adminName" required />
+                      </div>
+                      <div className="field-group">
+                        <label htmlFor="req-admin-surname">Sobrenome *</label>
+                        <input autoComplete="family-name" defaultValue={companyDraft?.adminSurname ?? ''} id="req-admin-surname" minLength={2} name="adminSurname" required />
+                      </div>
                     </div>
-                  </div>
-                  <label htmlFor="register-username">Usuário</label>
-                  <input autoComplete="username" id="register-username" maxLength={50} minLength={3} name="username" placeholder="seu.usuario" required />
-                  <label htmlFor="register-cpf">CPF</label>
-                  <input autoComplete="off" id="register-cpf" inputMode="numeric" maxLength={14} name="cpf" placeholder="000.000.000-00" required />
-                  <label htmlFor="register-password">Senha</label>
-                  <input autoComplete="new-password" id="register-password" maxLength={50} minLength={8} name="password" placeholder="Mínimo de 8 caracteres" required type="password" />
+                    <label htmlFor="req-admin-email">E-mail do Administrador *</label>
+                    <input autoComplete="email" defaultValue={companyDraft?.adminEmail ?? ''} id="req-admin-email" name="adminEmail" placeholder="admin@suaempresa.com" required type="email" />
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label htmlFor="req-admin-cpf">CPF *</label>
+                        <input autoComplete="off" defaultValue={companyDraft?.adminCpf ?? ''} id="req-admin-cpf" inputMode="numeric" maxLength={14} name="adminCpf" placeholder="000.000.000-00" required />
+                      </div>
+                      <div className="field-group">
+                        <label htmlFor="req-admin-password">Senha de Acesso *</label>
+                        <input autoComplete="new-password" defaultValue={companyDraft?.adminPassword ?? ''} id="req-admin-password" minLength={8} name="adminPassword" placeholder="Mínimo 8 caracteres" required type="password" />
+                      </div>
+                    </div>
+                    <button className="submit-button" disabled={isLoading} type="submit">
+                      {isLoading ? 'Enviando código...' : 'Enviar código para o e-mail'}
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  </form>
+                ) : (
+                  <form className="auth-form" onSubmit={handleSubmitCompanyRequest}>
+                    <label htmlFor="register-code">Código de verificação (6 dígitos)</label>
+                    <input
+                      autoComplete="one-time-code"
+                      className="auth-code-input"
+                      id="register-code"
+                      inputMode="numeric"
+                      maxLength={6}
+                      minLength={6}
+                      onChange={(e) => setRegisterCode(e.target.value.replace(/\D/g, ''))}
+                      pattern="\d{6}"
+                      placeholder="000000"
+                      required
+                      value={registerCode}
+                    />
+                    <button className="submit-button" disabled={isLoading} type="submit">
+                      {isLoading ? 'Enviando solicitação...' : 'Confirmar e enviar solicitação'}
+                      <span aria-hidden="true">→</span>
+                    </button>
+                    <div className="auth-secondary-actions">
+                      <button className="text-button" disabled={isLoading} onClick={() => void handleResendCompanyCode()} type="button">
+                        Reenviar código
+                      </button>
+                      <button
+                        className="text-button"
+                        disabled={isLoading}
+                        onClick={() => {
+                          setRegisterStep('form')
+                          showMessage('')
+                        }}
+                        type="button"
+                      >
+                        Alterar dados
+                      </button>
+                    </div>
+                  </form>
+                )
+              ) : forgotStep === 'email' ? (
+                <form className="auth-form" onSubmit={handleForgotSendCode}>
+                  <label htmlFor="forgot-email">E-mail cadastrado</label>
+                  <input
+                    autoComplete="email"
+                    defaultValue={forgotEmail}
+                    id="forgot-email"
+                    name="email"
+                    placeholder="voce@empresa.com"
+                    required
+                    type="email"
+                  />
                   <button className="submit-button" disabled={isLoading} type="submit">
-                    {isLoading ? 'Criando conta...' : 'Criar conta'}
+                    {isLoading ? 'Enviando código...' : 'Enviar código'}
                     <span aria-hidden="true">→</span>
                   </button>
+                </form>
+              ) : (
+                <form className="auth-form" onSubmit={handleResetPassword}>
+                  <label htmlFor="reset-code">Código de 6 dígitos</label>
+                  <input
+                    autoComplete="one-time-code"
+                    className="auth-code-input"
+                    id="reset-code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    minLength={6}
+                    name="code"
+                    pattern="\d{6}"
+                    placeholder="000000"
+                    required
+                  />
+                  <label htmlFor="reset-new-password">Nova senha</label>
+                  <input
+                    autoComplete="new-password"
+                    id="reset-new-password"
+                    maxLength={100}
+                    minLength={8}
+                    name="newPassword"
+                    placeholder="Mínimo de 8 caracteres"
+                    required
+                    type="password"
+                  />
+                  <label htmlFor="reset-confirm-password">Confirmar nova senha</label>
+                  <input
+                    autoComplete="new-password"
+                    id="reset-confirm-password"
+                    maxLength={100}
+                    minLength={8}
+                    name="confirmPassword"
+                    placeholder="Repita a nova senha"
+                    required
+                    type="password"
+                  />
+                  <button className="submit-button" disabled={isLoading} type="submit">
+                    {isLoading ? 'Redefinindo...' : 'Redefinir senha'}
+                    <span aria-hidden="true">→</span>
+                  </button>
+                  <div className="auth-secondary-actions">
+                    <button className="text-button" disabled={isLoading} onClick={() => void handleResendForgotCode()} type="button">
+                      Reenviar código
+                    </button>
+                    <button
+                      className="text-button"
+                      disabled={isLoading}
+                      onClick={() => {
+                        setForgotStep('email')
+                        showMessage('')
+                      }}
+                      type="button"
+                    >
+                      Alterar e-mail
+                    </button>
+                  </div>
                 </form>
               )}
 
@@ -274,16 +622,27 @@ function App() {
               )}
 
               <p className="switch-prompt">
-                {screen === 'login' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}{' '}
+                {screen === 'login'
+                  ? 'Sua empresa quer usar o sistema?'
+                  : screen === 'forgot'
+                    ? 'Lembrou sua senha?'
+                    : 'Sua empresa já tem acesso?'}{' '}
                 <button
                   className="text-button"
                   onClick={() => {
-                    setScreen(screen === 'login' ? 'register' : 'login')
+                    if (screen === 'login') {
+                      setScreen('register')
+                      setRegisterStep('form')
+                    } else {
+                      setScreen('login')
+                      setRegisterStep('form')
+                      setForgotStep('email')
+                    }
                     showMessage('')
                   }}
                   type="button"
                 >
-                  {screen === 'login' ? 'Cadastre-se' : 'Fazer login'}
+                  {screen === 'login' ? 'Solicitar cadastro' : 'Voltar para o login'}
                 </button>
               </p>
           </>

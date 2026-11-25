@@ -71,6 +71,27 @@ export type AdminClientsResponse = {
   clients: AdminClient[]
 }
 
+export type CompanyRegistrationRequest = {
+  id: string
+  registeredCompanyName: string
+  tradeName: string
+  cnpj: string
+  companyEmail?: string | null
+  phone?: string | null
+  adminName: string
+  adminSurname: string
+  adminEmail: string
+  adminCpf: string
+  status: 'pending' | 'approved' | 'rejected' | string
+  rejectionReason?: string | null
+  createdAt: string
+}
+
+export type CompanyRequestsResponse = {
+  message: string
+  requests: CompanyRegistrationRequest[]
+}
+
 export async function getSystemMetrics(token: string): Promise<SystemMetricsResponse> {
   return apiRequest<SystemMetricsResponse>('/admin/system/metrics', {
     headers: { Authorization: `Bearer ${token}` },
@@ -89,5 +110,40 @@ export async function getAdminCompanyClients(
 ): Promise<AdminClientsResponse> {
   return apiRequest<AdminClientsResponse>(`/admin/system/clients?companyId=${encodeURIComponent(companyId)}`, {
     headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function getCompanyRequests(
+  token: string,
+  status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending',
+): Promise<CompanyRequestsResponse> {
+  return apiRequest<CompanyRequestsResponse>(`/admin/company-requests?status=${encodeURIComponent(status)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function approveCompanyRequest(
+  token: string,
+  id: string,
+): Promise<{
+  message: string
+  company: { id: string; tradeName: string }
+  adminUser: { id: string; username: string; email: string; role: string }
+}> {
+  return apiRequest(`/admin/company-requests/${encodeURIComponent(id)}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function rejectCompanyRequest(
+  token: string,
+  id: string,
+  reason: string,
+): Promise<{ message: string }> {
+  return apiRequest(`/admin/company-requests/${encodeURIComponent(id)}/reject`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ reason }),
   })
 }
