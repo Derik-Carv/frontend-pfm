@@ -46,7 +46,7 @@ Exemplo:
 VITE_API_URL=https://api.seu-dominio.com
 ```
 
-Não use `http://137.131.254.117:3336` em produção: o frontend da Vercel será
+Não use `http://SEU_IP_PUBLICO:3336` em produção: o frontend da Vercel será
 servido por HTTPS e o navegador bloqueará essa chamada por mixed content.
 
 Após o primeiro deploy, configure no backend `CORS_ORIGIN` com o domínio
@@ -67,7 +67,7 @@ CORS_ORIGIN=https://app.seu-dominio.com
 Defina a URL pública da API antes de iniciar:
 
 ```bash
-export VITE_API_URL=http://137.131.254.117:3336
+export VITE_API_URL=https://api.seu-dominio.com
 export FRONTEND_PORT=8080
 docker compose up -d --build
 ```
