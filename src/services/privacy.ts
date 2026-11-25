@@ -3,6 +3,13 @@ import { apiRequest } from './api'
 export type LegalMetadata = {
   termsVersion: string
   privacyVersion: string
+  controller: {
+    name: string
+    document: string | null
+    address: string | null
+    jurisdiction: string
+    supportEmail: string
+  }
   dpo: {
     name: string
     email: string

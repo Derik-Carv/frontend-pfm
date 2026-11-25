@@ -15,6 +15,13 @@ type LegalDocumentsModalProps = {
 const DEFAULT_META: LegalMetadata = {
   termsVersion: '2026-11-24-v2',
   privacyVersion: '2026-11-24-v2',
+  controller: {
+    name: 'Derik Flash (Plataforma PFM)',
+    document: null,
+    address: null,
+    jurisdiction: 'Brasil',
+    supportEmail: 'privacidade@derikdev.cloud',
+  },
   dpo: {
     name: 'Canal de Privacidade / Encarregado (Agente de Pequeno Porte — Res. CD/ANPD nº 2/2022 e nº 18/2024)',
     email: 'privacidade@derikdev.cloud',
@@ -78,6 +85,7 @@ export function LegalDocumentsModal({
   const resolvedDpoEmail = dpoEmail || meta.dpo.email
   const resolvedPrivacyVersion = privacyVersion || meta.privacyVersion
   const resolvedTermsVersion = termsVersion || meta.termsVersion
+  const { controller } = meta
 
   return (
     <div className="legal-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-label="Documentos Legais LGPD">
@@ -115,9 +123,15 @@ export function LegalDocumentsModal({
             <>
               <span className="legal-modal-meta">Versão vigente: {resolvedPrivacyVersion}</span>
 
-              <h3>1. Papéis no Tratamento (Controlador e Operador)</h3>
+              <h3>1. Identificação do Responsável e Papéis no Tratamento</h3>
               <p>
-                A plataforma <strong>Derik Flash (PFM)</strong> atua como <strong>Controladora</strong> dos dados de cadastro, autenticação, aprovação empresarial e auditoria de segurança dos usuários do SaaS, e como <strong>Operadora</strong> (Art. 5º, VII da LGPD) dos dados de clientes finais, serviços e notas fiscais inseridos por cada empresa contratante, a qual figura como Controladora da sua própria carteira.
+                A plataforma é operada por <strong>{controller.name}</strong>
+                {controller.document ? ` (CPF/CNPJ: ${controller.document})` : ''}
+                {controller.address ? `, com sede/endereço em ${controller.address}` : ''}
+                {' '}(e-mail de atendimento: <a href={`mailto:${controller.supportEmail}`}>{controller.supportEmail}</a>).
+              </p>
+              <p>
+                No modelo SaaS multi-tenant, atuamos como <strong>Controladores</strong> dos dados de cadastro, autenticação, aprovação empresarial e auditoria dos usuários da plataforma, e como <strong>Operadores</strong> (Art. 5º, VII da LGPD) dos dados de clientes finais, serviços e notas fiscais inseridos por cada empresa contratante, a qual figura como Controladora da sua própria carteira.
               </p>
 
               <h3>2. Dados Tratados e Bases Legais (Art. 7º)</h3>
@@ -136,9 +150,9 @@ export function LegalDocumentsModal({
                 <li><strong>Documentos e notas fiscais (Art. 16, I da LGPD):</strong> preservados pelo prazo legal tributário mínimo de <strong>{meta.fiscalRetentionYears} anos</strong>, mesmo após anonimização de usuário ou cliente PF.</li>
               </ul>
 
-              <h3>4. Armazenamento no Navegador (Sem Cookies de Rastreamento)</h3>
+              <h3>4. Cookies, Fontes e Armazenamento no Navegador</h3>
               <p>
-                Este aplicativo não utiliza cookies de publicidade, analytics comportamental ou rastreamento de terceiros. O armazenamento local (<code>localStorage</code>) é empregado exclusivamente para manter o token de sessão (sem CPF no payload), a empresa selecionada e o tema claro/escuro.
+                Este aplicativo <strong>não</strong> utiliza cookies de publicidade, analytics comportamental, pixels ou rastreadores de terceiros. Inclusive as fontes tipográficas da interface são empacotadas localmente na aplicação (sem chamadas externas a CDNs de fontes). O armazenamento local (<code>localStorage</code>) é empregado exclusivamente para manter o token de sessão (sem CPF no payload), a empresa selecionada e o tema claro/escuro.
               </p>
 
               <h3>5. Transferência Internacional e Subprocessadores (Res. CD/ANPD nº 19/2024)</h3>
@@ -165,9 +179,10 @@ export function LegalDocumentsModal({
             <>
               <span className="legal-modal-meta">Versão vigente: {resolvedTermsVersion}</span>
 
-              <h3>1. Objeto e Acesso Multi-Tenant</h3>
+              <h3>1. Objeto, Provedor e Acesso Multi-Tenant</h3>
               <p>
-                Estes Termos regulam o uso do sistema <strong>Derik Flash (PFM)</strong> pelas empresas contratantes e seus colaboradores autorizados. O ingresso de novas empresas depende de solicitação validada por e-mail e aprovação expressa do Administrador SaaS.
+                Estes Termos regulam o uso do sistema fornecido por <strong>{controller.name}</strong>
+                {controller.document ? ` (CPF/CNPJ: ${controller.document})` : ''} às empresas contratantes e seus colaboradores autorizados. O ingresso de novas empresas depende de solicitação validada por e-mail e aprovação expressa do Administrador SaaS.
               </p>
 
               <h3>2. Responsabilidades da Empresa Contratante (DPA)</h3>
@@ -183,9 +198,9 @@ export function LegalDocumentsModal({
                 <li>Comunicar a ANPD e os titulares em até <strong>{meta.incidentNotificationBusinessDays} dias úteis</strong> (ou até <strong>{meta.smallAgentNotificationBusinessDays} dias úteis</strong> quando aplicável o regime diferenciado de Agente de Pequeno Porte — Res. CD/ANPD nº 2/2022 e nº 15/2024) caso ocorra incidente com risco ou dano relevante, mantendo registro interno por {meta.incidentRetentionYears} anos e avisando prontamente o Controlador contratante.</li>
               </ul>
 
-              <h3>4. Encerramento e Preservação Legal</h3>
+              <h3>4. Encerramento, Preservação Legal e Foro</h3>
               <p>
-                O titular pode desativar e anonimizar sua conta pessoal a qualquer momento (exceto se for o único administrador SaaS ativo), permanecendo resguardados os registros fiscais exigidos por lei por {meta.fiscalRetentionYears} anos (Art. 16, I da LGPD).
+                O titular pode desativar e anonimizar sua conta pessoal a qualquer momento (exceto se for o único administrador SaaS ativo), permanecendo resguardados os registros fiscais exigidos por lei por {meta.fiscalRetentionYears} anos (Art. 16, I da LGPD). Fica eleito o foro de <strong>{controller.jurisdiction}</strong> para dirimir eventuais controvérsias destes Termos, observadas as normas de proteção de dados vigentes no Brasil.
               </p>
             </>
           )}
