@@ -1,7 +1,7 @@
 :root {
   font-family: var(--font-ui);
-  color: #1b281d;
-  background: #eaeee9;
+  color: #152317;
+  background: #d9e0d7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -10,30 +10,30 @@
   --font-ui: 'DM Sans', 'Segoe UI', sans-serif;
   --font-heading: 'Manrope', 'DM Sans', sans-serif;
 
-  /* Superfícies Light (Warm Stone / Sage-Gray contrastando com cards brancos) */
-  --paper: #eaeee9;
-  --bg: #eaeee9;
-  --field-bg: #ffffff;
-  --surface: #ffffff;
-  --card-surface: #ffffff;
-  --surface-subtle: #f3f6f2;
-  --card-surface-elevated: #f3f6f2;
-  --input-bg: #ffffff;
-  --row-hover: #edf2ec;
+  /* Superfícies Light (tons suaves sem branco ofuscante, contraste nítido entre canvas e cards) */
+  --paper: #d9e0d7;
+  --bg: #d9e0d7;
+  --field-bg: #f1f4f0;
+  --surface: #f1f4f0;
+  --card-surface: #f1f4f0;
+  --surface-subtle: #e4eae2;
+  --card-surface-elevated: #e4eae2;
+  --input-bg: #f8faf7;
+  --row-hover: #e5ece3;
 
-  /* Bordas com ênfase real */
-  --field-border: #c2cdc0;
-  --border: #c2cdc0;
-  --border-subtle: #dae2d8;
-  --border-strong: #a3b3a1;
+  /* Bordas com ênfase real sem precisar passar o mouse */
+  --field-border: #9aa998;
+  --border: #9aa998;
+  --border-subtle: #b8c4b6;
+  --border-strong: #768874;
 
-  /* Tipografia */
-  --heading: #091e0b;
-  --ink: #1b281d;
-  --text: #1b281d;
-  --label: #2c3e2f;
-  --muted: #526355;
-  --footnote: #68786b;
+  /* Tipografia com leitura confortável e alto contraste */
+  --heading: #0a160c;
+  --ink: #152317;
+  --text: #152317;
+  --label: #1e3021;
+  --muted: #2f4132;
+  --footnote: #394c3c;
   --panel-text: #f4f6f4;
 
   /* Marca / Acento primário (Forest & Olive Green inspirado no Dribbble) */
@@ -43,53 +43,53 @@
   --accent-gradient: linear-gradient(135deg, #3b7f33 0%, #1e562b 100%);
   --accent-gradient-hover: linear-gradient(135deg, #316c2b 0%, #174623 100%);
   --accent-soft: #eaf3e6;
-  --accent-border: #b6d2aa;
-  --accent-text: #21561c;
+  --accent-border: #8db382;
+  --accent-text: #1a4a16;
   --lime: #6da342;
   --emerald-accent: #2e7d4b;
   --clay: #b86212;
 
   /* Topbar Light */
-  --topbar-bg: #ffffff;
-  --topbar-border: #c2cdc0;
-  --topbar-ink: #091e0b;
-  --topbar-muted: #526355;
-  --topbar-active: #21561c;
-  --topbar-control-bg: #edf2ec;
-  --topbar-control-border: #bdcab9;
-  --topbar-control-active-bg: #ffffff;
-  --topbar-control-active-ink: #091e0b;
+  --topbar-bg: #eef2ed;
+  --topbar-border: #9aa998;
+  --topbar-ink: #0a160c;
+  --topbar-muted: #2f4132;
+  --topbar-active: #1a4a16;
+  --topbar-control-bg: #dfe6dd;
+  --topbar-control-border: #8a9b88;
+  --topbar-control-active-bg: #f8faf7;
+  --topbar-control-active-ink: #0a160c;
 
   /* Semânticas */
   --success-bg: #e7f5ec;
-  --success-border: #9fd3b1;
-  --success-text: #156235;
+  --success-border: #84c19a;
+  --success-text: #12562e;
   --success-solid: #1e7d46;
 
   --warning-bg: #fdf6e3;
-  --warning-border: #ebd18c;
-  --warning-text: #995809;
+  --warning-border: #dcb961;
+  --warning-text: #854b07;
   --warning-solid: #c9770e;
 
   --danger-bg: #fdf1ef;
-  --danger-border: #f0beb6;
-  --danger-text: #a53123;
+  --danger-border: #e09c91;
+  --danger-text: #96281c;
   --danger-solid: #bf3f30;
   --danger-solid-hover: #9c2f23;
 
   --info-bg: #e8f3ef;
-  --info-border: #aad2c3;
-  --info-text: #145c43;
+  --info-border: #8ec1ae;
+  --info-text: #12513b;
 
   /* Mensagens / legado */
   --message-bg: #eaf3e6;
-  --message-text: #21561c;
+  --message-text: #1a4a16;
 
   /* Elevação e raios */
-  --shadow-xs: 0 1px 2px rgb(9 30 11 / 6%);
-  --shadow-sm: 0 2px 8px rgb(9 30 11 / 7%), 0 1px 2px rgb(9 30 11 / 4%);
-  --shadow-md: 0 12px 28px rgb(9 30 11 / 9%), 0 2px 6px rgb(9 30 11 / 5%);
-  --shadow-lg: 0 24px 54px rgb(9 30 11 / 18%);
+  --shadow-xs: 0 1px 3px rgb(9 24 11 / 9%);
+  --shadow-sm: 0 3px 10px rgb(9 24 11 / 10%), 0 1px 2px rgb(9 24 11 / 6%);
+  --shadow-md: 0 12px 28px rgb(9 24 11 / 12%), 0 2px 6px rgb(9 24 11 / 7%);
+  --shadow-lg: 0 24px 54px rgb(9 24 11 / 18%);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
