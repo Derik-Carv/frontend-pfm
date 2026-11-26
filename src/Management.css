@@ -230,8 +230,15 @@
   background: var(--input-bg);
   font: inherit;
   font-size: 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .management-fields textarea { resize: vertical; }
+.management-fields input:hover:not(:focus):not(:disabled),
+.management-fields select:hover:not(:focus):not(:disabled),
+.management-fields textarea:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
 .management-fields input:focus,
 .management-fields select:focus,
 .management-fields textarea:focus {

@@ -270,10 +270,12 @@
   border-radius: var(--radius-sm);
   color: var(--muted);
   background: var(--input-bg);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .dashboard-search > span { font-size: 18px; }
 .dashboard-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font: inherit; font-size: 12px; }
 .dashboard-search input::placeholder { color: var(--footnote); }
+.dashboard-search:hover:not(:focus-within) { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .dashboard-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .dashboard-scope-note { margin: 0 0 10px; color: var(--muted); font-size: 10px; }
 .dashboard-table-scroll {
@@ -320,6 +322,11 @@
   font: inherit;
   font-size: 11px;
   cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.dashboard-pagination-summary select:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .dashboard-page-controls { display: inline-flex; align-items: center; gap: 4px; }
 .dashboard-page-controls button {
@@ -376,6 +383,12 @@
   background: var(--input-bg);
   font: inherit;
   font-size: 11px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.bi-filter-select:hover:not(:focus):not(:disabled),
+.bi-filter-input:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .bi-filter-select:focus,
 .bi-filter-input:focus {

@@ -552,20 +552,7 @@ function App() {
                     required
                     value={username}
                   />
-                  <div className="auth-label-row">
-                    <label htmlFor="login-password">Senha</label>
-                    <button
-                      className="text-button auth-forgot-btn"
-                      onClick={() => {
-                        setScreen('forgot')
-                        setForgotStep('email')
-                        showMessage('')
-                      }}
-                      type="button"
-                    >
-                      Esqueci minha senha
-                    </button>
-                  </div>
+                  <label htmlFor="login-password">Senha</label>
                   <input
                     autoComplete="current-password"
                     id="login-password"
@@ -575,6 +562,17 @@ function App() {
                     required
                     type="password"
                   />
+                  <button
+                    className="text-button auth-forgot-btn"
+                    onClick={() => {
+                      setScreen('forgot')
+                      setForgotStep('email')
+                      showMessage('')
+                    }}
+                    type="button"
+                  >
+                    Esqueci minha senha
+                  </button>
                   <button className="submit-button" disabled={isLoading} type="submit">
                     {isLoading ? 'Entrando...' : 'Entrar'}
                     <span aria-hidden="true">→</span>

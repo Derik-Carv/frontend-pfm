@@ -315,6 +315,8 @@
 }
 
 .auth-forgot-btn {
+  align-self: flex-end;
+  margin-top: -2px;
   font-size: 12px;
 }
 
@@ -359,6 +361,11 @@
 
 .auth-form input::placeholder {
   color: var(--footnote);
+}
+
+.auth-form input:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .auth-form input:focus {
@@ -480,7 +487,7 @@
   padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
   color: var(--footnote);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0;
   line-height: 1.6;
   text-align: center;
@@ -502,6 +509,12 @@
   font-weight: 500;
   color: var(--ink);
   cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.legal-consent-box:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .legal-consent-box input[type="checkbox"] {
@@ -522,7 +535,7 @@
 
 .footnote-link {
   padding: 0;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
   text-decoration: underline;
 }

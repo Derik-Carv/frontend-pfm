@@ -14,6 +14,11 @@
   background: var(--input-bg);
   font: inherit;
   font-size: 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-toolbar select:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .admin-toolbar .management-secondary { margin-left: auto; }
 .admin-editor { margin-top: 17px; }
@@ -30,8 +35,15 @@
   background: var(--input-bg);
   font: inherit;
   font-size: 12px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .admin-field textarea { min-height: 76px; resize: vertical; }
+.admin-field input:hover:not(:focus):not(:disabled),
+.admin-field textarea:hover:not(:focus):not(:disabled),
+.admin-field select:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
 .admin-field input:focus,
 .admin-field textarea:focus,
 .admin-field select:focus {

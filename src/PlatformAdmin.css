@@ -159,6 +159,12 @@
   font: inherit;
   font-size: 13px;
   resize: vertical;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.branch-form textarea:hover:not(:focus):not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .branch-form textarea:focus {
