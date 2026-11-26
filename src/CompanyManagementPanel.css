@@ -10,8 +10,8 @@
   gap: 6px;
   padding: 4px;
   border: 1px solid var(--field-border);
-  border-radius: 6px;
-  background: var(--field-bg);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
 }
 
 .company-mgmt-tab {
@@ -28,16 +28,21 @@
   transition: background 150ms ease, color 150ms ease;
 }
 
+.company-mgmt-tab:hover:not(.is-active) {
+  color: var(--heading);
+}
+
 .company-mgmt-tab.is-active {
-  color: #fff;
-  background: #1b6951;
+  color: #ffffff;
+  background: var(--accent);
 }
 
 .company-mgmt-card {
   padding: 20px;
   border: 1px solid var(--field-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--field-bg);
+  box-shadow: var(--shadow-xs);
 }
 
 .company-mgmt-mother-banner {
@@ -47,7 +52,7 @@
   gap: 16px;
   padding-bottom: 16px;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--field-border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .company-mgmt-mother-banner h3 {
@@ -77,12 +82,18 @@
   width: 100%;
   min-height: 38px;
   padding: 8px 10px;
-  border: 1px solid var(--field-border);
-  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   color: var(--ink);
-  background: var(--paper);
+  background: var(--input-bg);
   font: inherit;
   font-size: 13px;
+}
+
+.branch-form select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: 0;
 }
 
 @media (max-width: 768px) {

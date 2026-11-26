@@ -330,7 +330,7 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
             <span className="platform-metric-title">Saúde do Sistema</span>
             <span className="platform-metric-icon">🟢</span>
           </div>
-          <div className="platform-metric-value" style={{ color: '#10b981' }}>
+          <div className="platform-metric-value" style={{ color: 'var(--success-text)' }}>
             {health?.status ? health.status.toUpperCase() : 'OPERACIONAL'}
           </div>
           <div className="platform-metric-meta">

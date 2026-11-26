@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 120;
-  background: rgba(2, 6, 23, 0.72);
+  background: rgb(2 6 23 / 70%);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -13,19 +13,19 @@
 .legal-modal {
   width: min(760px, 100%);
   max-height: 86vh;
-  background: var(--surface, #0f241e);
-  color: var(--text, #e6f2ed);
-  border: 1px solid var(--border, rgba(16, 185, 129, 0.25));
-  border-radius: 14px;
+  background: var(--field-bg);
+  color: var(--ink);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-lg);
 }
 
 .legal-modal-header {
   padding: 18px 22px;
-  border-bottom: 1px solid var(--border, rgba(16, 185, 129, 0.2));
+  border-bottom: 1px solid var(--field-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,6 +34,7 @@
 
 .legal-modal-header h2 {
   margin: 0;
+  color: var(--heading);
   font-size: 1.15rem;
 }
 
@@ -41,14 +42,14 @@
   display: flex;
   gap: 8px;
   padding: 12px 22px 0;
-  border-bottom: 1px solid var(--border, rgba(16, 185, 129, 0.16));
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .legal-modal-tab {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--muted, #9fb8ae);
+  color: var(--muted);
   padding: 8px 12px 10px;
   cursor: pointer;
   font-weight: 600;
@@ -56,8 +57,8 @@
 }
 
 .legal-modal-tab.is-active {
-  color: #10b981;
-  border-bottom-color: #10b981;
+  color: var(--accent-text);
+  border-bottom-color: var(--accent);
 }
 
 .legal-modal-body {
@@ -70,7 +71,7 @@
 .legal-modal-body h3 {
   margin: 18px 0 6px;
   font-size: 0.98rem;
-  color: #10b981;
+  color: var(--accent-text);
 }
 
 .legal-modal-body h3:first-child {
@@ -79,8 +80,19 @@
 
 .legal-modal-body p,
 .legal-modal-body li {
-  color: var(--text, #e6f2ed);
+  color: var(--ink);
   margin: 6px 0;
+}
+
+.legal-modal-body a {
+  color: var(--accent-text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-modal-body a:hover {
+  color: var(--accent);
 }
 
 .legal-modal-body ul {
@@ -91,17 +103,17 @@
 .legal-modal-meta {
   display: inline-block;
   font-size: 0.78rem;
-  opacity: 0.85;
   margin-bottom: 12px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
 }
 
 .legal-modal-footer {
   padding: 14px 22px;
-  border-top: 1px solid var(--border, rgba(16, 185, 129, 0.18));
+  border-top: 1px solid var(--field-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -111,15 +123,22 @@
 
 .legal-modal-dpo {
   font-size: 0.82rem;
-  color: var(--muted, #9fb8ae);
+  color: var(--muted);
 }
 
 .legal-modal-close {
-  border: 1px solid var(--border, rgba(16, 185, 129, 0.3));
-  background: rgba(16, 185, 129, 0.14);
-  color: inherit;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-subtle);
+  color: var(--ink);
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 600;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.legal-modal-close:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
 }

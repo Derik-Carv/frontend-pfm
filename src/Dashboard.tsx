@@ -57,7 +57,7 @@ type DashboardProps = {
   onLogout: () => void
 }
 
-const palette = ['#309b79', '#e77c0a', '#1e5e49', '#3b82f6', '#8b5cf6', '#ec4899']
+const palette = ['#6da342', '#2e865f', '#89bc58', '#1c5d43', '#d97706', '#5c7c66']
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function tokenRole(token: string): Role {
@@ -132,7 +132,7 @@ function PieChart({
       aria-label={`Gráfico de pizza dos ${services.length} maiores valores, total ${formatPrice(total)}`}
       className="dashboard-pie"
       role="img"
-      style={{ background: total ? `conic-gradient(${segments.join(', ')})` : 'conic-gradient(#d9ded5 0deg 360deg)' }}
+      style={{ background: total ? `conic-gradient(${segments.join(', ')})` : 'conic-gradient(var(--border-strong) 0deg 360deg)' }}
     >
       <span>
         <strong>{services.length}</strong>
@@ -746,7 +746,6 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
                         className={`dashboard-legend-row ${isSelected ? 'is-selected' : ''}`}
                         key={service.id}
                         onClick={() => handleBarSelect(service)}
-                        style={{ background: isSelected ? 'rgb(48 155 121 / 20%)' : undefined }}
                         type="button"
                         title="Clique para cruzar informações com este serviço"
                       >
@@ -915,7 +914,6 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
                     <tr
                       key={service.id}
                       className={isCrossSelected ? 'is-selected' : ''}
-                      style={{ background: isCrossSelected ? 'rgb(48 155 121 / 15%)' : undefined }}
                     >
                       <td>
                         <button

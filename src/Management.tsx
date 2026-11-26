@@ -582,7 +582,7 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                                   </button>
                                   {role === 'company_admin' && client.active && (
                                     <button
-                                      className="management-edit-btn"
+                                      className="management-edit-btn is-danger"
                                       onClick={async (e) => {
                                         e.stopPropagation()
                                         const confirmed = window.confirm(
@@ -600,7 +600,6 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
                                           setError(err instanceof Error ? err.message : 'Erro ao anonimizar cliente.')
                                         }
                                       }}
-                                      style={{ borderColor: 'rgba(239, 68, 68, 0.45)', color: '#fca5a5' }}
                                       type="button"
                                     >
                                       Anonimizar LGPD

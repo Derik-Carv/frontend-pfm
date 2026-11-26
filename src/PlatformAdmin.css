@@ -35,8 +35,8 @@
 
 .platform-toggle-btn {
   padding: 5px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
   font: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -44,15 +44,15 @@
 }
 
 .platform-toggle-btn.is-active {
-  background: rgb(16 185 129 / 16%);
-  border-color: rgb(16 185 129 / 35%);
-  color: #10b981;
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
 }
 
 .platform-toggle-btn.is-inactive {
-  background: rgb(239 68 68 / 15%);
-  border-color: rgb(239 68 68 / 35%);
-  color: #ef4444;
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
 }
 
 .platform-mother-modal {
@@ -70,7 +70,7 @@
 .platform-form-divider {
   margin-top: 6px;
   padding-top: 12px;
-  border-top: 1px solid var(--field-border);
+  border-top: 1px solid var(--border-subtle);
   color: var(--muted);
   font-size: 11px;
   font-weight: 700;
@@ -91,8 +91,8 @@
   gap: 16px;
   padding: 14px 16px;
   border: 1px solid var(--field-border);
-  border-radius: 10px;
-  background: var(--paper);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
 }
 
 .platform-request-info {
@@ -122,14 +122,14 @@
 .platform-pending-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  background: rgb(245 158 11 / 16%);
-  color: #f59e0b;
-  border: 1px solid rgb(245 158 11 / 35%);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
 }
 
 .platform-request-meta {
@@ -152,13 +152,19 @@
 .branch-form textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--field-border);
-  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   color: var(--ink);
-  background: var(--paper);
+  background: var(--input-bg);
   font: inherit;
   font-size: 13px;
   resize: vertical;
+}
+
+.branch-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: 0;
 }
 
 /* 1. Cards de Métricas e Telemetria */
@@ -174,16 +180,11 @@
   justify-content: space-between;
   padding: 18px 20px;
   border: 1px solid var(--field-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--field-bg);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+  box-shadow: var(--shadow-xs);
   position: relative;
   overflow: hidden;
-}
-
-:root[data-theme='dark'] .platform-metric-card {
-  background: linear-gradient(135deg, rgb(6 78 59 / 30%) 0%, rgb(6 78 59 / 10%) 100%), #0d2720;
-  border-color: rgb(16 185 129 / 20%);
 }
 
 .platform-metric-header {
@@ -201,10 +202,6 @@
   letter-spacing: 0.6px;
 }
 
-:root[data-theme='dark'] .platform-metric-title {
-  color: rgb(110 231 183 / 80%);
-}
-
 .platform-metric-icon {
   font-size: 16px;
 }
@@ -217,18 +214,10 @@
   letter-spacing: -0.5px;
 }
 
-:root[data-theme='dark'] .platform-metric-value {
-  color: #f8fafc;
-}
-
 .platform-metric-meta {
   margin-top: 8px;
   color: var(--muted);
   font-size: 11px;
-}
-
-:root[data-theme='dark'] .platform-metric-meta {
-  color: #94a3b8;
 }
 
 .platform-metric-meta strong {
@@ -242,13 +231,9 @@
   gap: 16px;
   padding: 22px;
   border: 1px solid var(--field-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--field-bg);
-}
-
-:root[data-theme='dark'] .platform-cascade-section {
-  background: #0d2720;
-  border-color: rgb(16 185 129 / 18%);
+  box-shadow: var(--shadow-xs);
 }
 
 .platform-cascade-header {
@@ -256,7 +241,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--field-border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .platform-cascade-header h3 {
@@ -279,20 +264,15 @@
 
 .platform-mother-card {
   border: 1px solid var(--field-border);
-  border-radius: 10px;
-  background: var(--paper);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
   overflow: hidden;
   transition: all 180ms ease;
 }
 
-:root[data-theme='dark'] .platform-mother-card {
-  background: #12352b;
-  border-color: rgb(16 185 129 / 16%);
-}
-
 .platform-mother-card.is-expanded {
-  border-color: #10b981;
-  box-shadow: 0 4px 18px rgb(0 0 0 / 25%);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .platform-mother-row {
@@ -307,7 +287,7 @@
 }
 
 .platform-mother-row:hover {
-  background: rgb(16 185 129 / 8%);
+  background: var(--row-hover);
 }
 
 .platform-mother-identity {
@@ -325,9 +305,9 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  background: rgb(16 185 129 / 20%);
-  color: #10b981;
-  border: 1px solid rgb(16 185 129 / 35%);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  border: 1px solid var(--accent-border);
 }
 
 .platform-mother-names {
@@ -363,7 +343,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--field-bg);
   border: 1px solid var(--field-border);
   font-size: 11px;
@@ -382,10 +362,10 @@
   gap: 6px;
   min-height: 34px;
   padding: 0 12px;
-  border: 1px solid rgb(16 185 129 / 30%);
-  border-radius: 6px;
-  color: #10b981;
-  background: rgb(16 185 129 / 10%);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  color: var(--accent-text);
+  background: var(--accent-soft);
   font: inherit;
   font-size: 11px;
   font-weight: 600;
@@ -395,16 +375,16 @@
 }
 
 .platform-view-clients-btn:hover {
-  background: #10b981;
-  color: #fff;
-  border-color: #10b981;
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
 }
 
 /* Filiais em Cascata */
 .platform-branches-container {
   padding: 12px 20px 16px 40px;
   border-top: 1px solid var(--field-border);
-  background: rgb(0 0 0 / 12%);
+  background: var(--paper);
   animation: dashboard-expand-enter 200ms ease;
 }
 
@@ -427,14 +407,9 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--field-bg);
   border: 1px solid var(--field-border);
-}
-
-:root[data-theme='dark'] .platform-branch-row {
-  background: #0d2720;
-  border-color: rgb(16 185 129 / 14%);
 }
 
 .platform-branch-identity {
@@ -458,9 +433,9 @@
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  background: rgb(59 130 246 / 15%);
-  color: #60a5fa;
-  border: 1px solid rgb(59 130 246 / 30%);
+  background: var(--info-bg);
+  color: var(--info-text);
+  border: 1px solid var(--info-border);
 }
 
 .platform-branch-names {
@@ -538,5 +513,5 @@
 .platform-section-sub {
   margin: 4px 0 0;
   font-size: 0.85rem;
-  color: var(--muted, #9fb8ae);
+  color: var(--muted);
 }

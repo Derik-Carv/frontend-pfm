@@ -1,50 +1,185 @@
 :root {
   font-family: var(--font-ui);
-  color: #0f2f24;
-  background: #f4fbf7;
+  color: #1b281d;
+  background: #eaeee9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --forest: #0f2f24;
   --font-ui: 'DM Sans', 'Segoe UI', sans-serif;
   --font-heading: 'Manrope', 'DM Sans', sans-serif;
-  --panel-text: #f4fbf7;
-  --paper: #f4fbf7;
-  --lime: #309b79;
-  --clay: #e77c0a;
-  --ink: #0f2f24;
-  --muted: #617c70;
-  --heading: var(--forest);
-  --label: var(--forest);
+
+  /* Superfícies Light (Warm Stone / Sage-Gray contrastando com cards brancos) */
+  --paper: #eaeee9;
+  --bg: #eaeee9;
   --field-bg: #ffffff;
-  --field-border: #d7e6de;
-  --message-bg: #e2f2eb;
-  --message-text: var(--forest);
-  --footnote: #71877c;
+  --surface: #ffffff;
+  --card-surface: #ffffff;
+  --surface-subtle: #f3f6f2;
+  --card-surface-elevated: #f3f6f2;
+  --input-bg: #ffffff;
+  --row-hover: #edf2ec;
+
+  /* Bordas com ênfase real */
+  --field-border: #c2cdc0;
+  --border: #c2cdc0;
+  --border-subtle: #dae2d8;
+  --border-strong: #a3b3a1;
+
+  /* Tipografia */
+  --heading: #091e0b;
+  --ink: #1b281d;
+  --text: #1b281d;
+  --label: #2c3e2f;
+  --muted: #526355;
+  --footnote: #68786b;
+  --panel-text: #f4f6f4;
+
+  /* Marca / Acento primário (Forest & Olive Green inspirado no Dribbble) */
+  --forest: #21561c;
+  --accent: #27632a;
+  --accent-hover: #1d4e21;
+  --accent-gradient: linear-gradient(135deg, #3b7f33 0%, #1e562b 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #316c2b 0%, #174623 100%);
+  --accent-soft: #eaf3e6;
+  --accent-border: #b6d2aa;
+  --accent-text: #21561c;
+  --lime: #6da342;
+  --emerald-accent: #2e7d4b;
+  --clay: #b86212;
+
+  /* Topbar Light */
+  --topbar-bg: #ffffff;
+  --topbar-border: #c2cdc0;
+  --topbar-ink: #091e0b;
+  --topbar-muted: #526355;
+  --topbar-active: #21561c;
+  --topbar-control-bg: #edf2ec;
+  --topbar-control-border: #bdcab9;
+  --topbar-control-active-bg: #ffffff;
+  --topbar-control-active-ink: #091e0b;
+
+  /* Semânticas */
+  --success-bg: #e7f5ec;
+  --success-border: #9fd3b1;
+  --success-text: #156235;
+  --success-solid: #1e7d46;
+
+  --warning-bg: #fdf6e3;
+  --warning-border: #ebd18c;
+  --warning-text: #995809;
+  --warning-solid: #c9770e;
+
+  --danger-bg: #fdf1ef;
+  --danger-border: #f0beb6;
+  --danger-text: #a53123;
+  --danger-solid: #bf3f30;
+  --danger-solid-hover: #9c2f23;
+
+  --info-bg: #e8f3ef;
+  --info-border: #aad2c3;
+  --info-text: #145c43;
+
+  /* Mensagens / legado */
+  --message-bg: #eaf3e6;
+  --message-text: #21561c;
+
+  /* Elevação e raios */
+  --shadow-xs: 0 1px 2px rgb(9 30 11 / 6%);
+  --shadow-sm: 0 2px 8px rgb(9 30 11 / 7%), 0 1px 2px rgb(9 30 11 / 4%);
+  --shadow-md: 0 12px 28px rgb(9 30 11 / 9%), 0 2px 6px rgb(9 30 11 / 5%);
+  --shadow-lg: 0 24px 54px rgb(9 30 11 / 18%);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
   color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-  color: #f1f5f9;
-  background: #0a1f18;
+  color: #d6ddd7;
+  background: #090c0a;
 
-  --paper: #0a1f18;
-  --heading: #f8fafc;
-  --label: #a7f3d0;
-  --ink: #f1f5f9;
-  --muted: #6ee7b7;
-  --field-bg: #0d2720;
-  --field-border: rgb(16 185 129 / 18%);
-  --message-bg: #12352b;
-  --message-text: #ecfdf5;
-  --footnote: #94a3b8;
-  --lime: #10b981;
-  --clay: #f59e0b;
-  --emerald-accent: #10b981;
-  --card-surface: #0d2720;
-  --card-surface-elevated: #12352b;
+  /* Superfícies Dark (Obsidian Black & Carvão-Floresta) */
+  --paper: #090c0a;
+  --bg: #090c0a;
+  --field-bg: #101611;
+  --surface: #101611;
+  --card-surface: #101611;
+  --surface-subtle: #161f18;
+  --card-surface-elevated: #161f18;
+  --input-bg: #0c110d;
+  --row-hover: rgb(114 168 67 / 8%);
+
+  /* Bordas hairline oliva-carvão */
+  --field-border: #222e24;
+  --border: #222e24;
+  --border-subtle: #1a241c;
+  --border-strong: #314133;
+
+  /* Tipografia neutra de alto contraste */
+  --heading: #f4f6f4;
+  --ink: #d6ddd7;
+  --text: #d6ddd7;
+  --label: #b6c0b7;
+  --muted: #849286;
+  --footnote: #68756a;
+  --panel-text: #f4f6f4;
+
+  /* Marca / Acento primário (Duplo-verde Olive + Pine-Emerald) */
+  --forest: #2e733b;
+  --accent: #558f38;
+  --accent-hover: #64a341;
+  --accent-gradient: linear-gradient(135deg, #689f3f 0%, #26673d 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #76b049 0%, #2e7848 100%);
+  --accent-soft: rgb(109 163 66 / 14%);
+  --accent-border: rgb(109 163 66 / 34%);
+  --accent-text: #92c964;
+  --lime: #7bb34b;
+  --emerald-accent: #4caf7d;
+  --clay: #e59a3a;
+
+  /* Topbar Dark */
+  --topbar-bg: #0c110d;
+  --topbar-border: #1f2a21;
+  --topbar-ink: #f4f6f4;
+  --topbar-muted: #8b998d;
+  --topbar-active: #8ac25c;
+  --topbar-control-bg: #090c0a;
+  --topbar-control-border: #273429;
+  --topbar-control-active-bg: #1a251c;
+  --topbar-control-active-ink: #f4f6f4;
+
+  /* Semânticas Dark */
+  --success-bg: rgb(75 181 117 / 14%);
+  --success-border: rgb(75 181 117 / 34%);
+  --success-text: #5cd18a;
+  --success-solid: #3ba666;
+
+  --warning-bg: rgb(245 158 11 / 14%);
+  --warning-border: rgb(245 158 11 / 34%);
+  --warning-text: #fbbf24;
+  --warning-solid: #d98c1c;
+
+  --danger-bg: rgb(201 82 66 / 16%);
+  --danger-border: rgb(201 82 66 / 38%);
+  --danger-text: #f0887a;
+  --danger-solid: #c24132;
+  --danger-solid-hover: #a53326;
+
+  --info-bg: rgb(76 175 125 / 14%);
+  --info-border: rgb(76 175 125 / 32%);
+  --info-text: #67c39a;
+
+  --message-bg: rgb(109 163 66 / 14%);
+  --message-text: #c9e4b2;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 34%);
+  --shadow-sm: 0 4px 14px rgb(0 0 0 / 36%);
+  --shadow-md: 0 14px 34px rgb(0 0 0 / 48%);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 62%);
+
   color-scheme: dark;
 }
 
@@ -61,7 +196,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -70,6 +207,11 @@ button {
 }
 
 ::selection {
-  color: #142e25;
-  background: #d5e5a5;
+  color: var(--heading);
+  background: var(--accent-border);
+}
+
+:root[data-theme='dark'] ::selection {
+  color: #f4f6f4;
+  background: rgb(109 163 66 / 35%);
 }
