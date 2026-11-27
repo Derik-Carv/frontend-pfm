@@ -3,11 +3,13 @@ import { apiRequest } from './services/api'
 import AdminPanel from './AdminPanel'
 import ManagementPanel from './Management'
 import NfPanel from './NfPanel'
+import FinancePanel from './FinancePanel'
 import { CompanySelector } from './CompanySelector'
 import { CompanyManagementPanel } from './CompanyManagementPanel'
 import { PrivacyPanel } from './PrivacyPanel'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import { getPublicLegalMetadata } from './services/privacy'
+import { notifyError } from './services/toast'
 import './Dashboard.css'
 
 type Role = 'administrator' | 'company_admin' | 'manager' | 'finance' | 'observer' | 'colaborator' | string
@@ -190,6 +192,13 @@ function ServiceBars({
   )
 }
 
+const setLoadError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setDetailError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+
 function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const role = tokenRole(token)
   const isPlatformAdmin = role === 'administrator'
@@ -201,14 +210,12 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [isOverviewLoading, setIsOverviewLoading] = useState(!isPlatformAdmin)
   const [isLoading, setIsLoading] = useState(!isPlatformAdmin)
   const [refreshing, setRefreshing] = useState(0)
-  const [loadError, setLoadError] = useState('')
   const [search, setSearch] = useState('')
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [detail, setDetail] = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
-  const [detailError, setDetailError] = useState('')
-  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'company' | 'admin' | 'privacy'>(
+  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'finance' | 'company' | 'admin' | 'privacy'>(
     isPlatformAdmin ? 'admin' : 'overview',
   )
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
@@ -245,6 +252,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [expandedChart, setExpandedChart] = useState<'top3' | 'recent' | 'oldest' | null>(null)
 
   const canAccessNf = isCompanyAdmin || role === 'manager' || role === 'finance'
+  const canAccessFinance = isCompanyAdmin || role === 'finance' || role === 'manager' || role === 'observer'
   const canAccessCompanyManagement = isCompanyAdmin
   const canAccessAdmin = isPlatformAdmin
 
@@ -493,6 +501,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
               <button aria-current={activeArea === 'services' ? 'page' : undefined} onClick={() => setActiveArea('services')} type="button">Serviços</button>
               <button aria-current={activeArea === 'clients' ? 'page' : undefined} onClick={() => setActiveArea('clients')} type="button">Clientes</button>
               {canAccessNf && <button aria-current={activeArea === 'nf' ? 'page' : undefined} onClick={() => setActiveArea('nf')} type="button">Notas fiscais</button>}
+              {canAccessFinance && <button aria-current={activeArea === 'finance' ? 'page' : undefined} onClick={() => setActiveArea('finance')} type="button">Financeiro</button>}
               {canAccessCompanyManagement && <button aria-current={activeArea === 'company' ? 'page' : undefined} onClick={() => setActiveArea('company')} type="button">Minha Empresa</button>}
               <button aria-current={activeArea === 'privacy' ? 'page' : undefined} onClick={() => setActiveArea('privacy')} type="button">Privacidade (LGPD)</button>
             </>
@@ -527,13 +536,6 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
             <span aria-hidden="true">↻</span> Sincronizar dados
           </button>
         </section>
-
-        {loadError && (
-          <div className="dashboard-alert" role="alert">
-            <span>{loadError}</span>
-            <button onClick={() => setRefreshing((value) => value + 1)} type="button">Tentar novamente</button>
-          </div>
-        )}
 
         {/* 1.5 Filtros Globais Analíticos */}
         <section className="bi-toolbar" aria-label="Filtros analíticos interativos">
@@ -1023,7 +1025,6 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
               <button aria-label="Fechar detalhes" className="dashboard-close" onClick={() => setDetail(null)} type="button">×</button>
             </div>
             {detailLoading && <p className="dashboard-detail-status">Carregando registros da API...</p>}
-            {detailError && <p className="dashboard-detail-error" role="status">{detailError}</p>}
             {detail.services.length ? (
               <>
                 <div className="dashboard-detail-summary">
@@ -1066,6 +1067,8 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         )}
         </> : activeArea === 'nf' ? (
           <NfPanel key={`nf-${token}-${refreshing}`} onLogout={onLogout} role={role} token={token} />
+        ) : activeArea === 'finance' && canAccessFinance ? (
+          <FinancePanel key={`finance-${token}-${refreshing}`} onLogout={onLogout} role={role} token={token} />
         ) : activeArea === 'company' ? (
           <CompanyManagementPanel
             onCompanyChanged={() => setRefreshing((value) => value + 1)}

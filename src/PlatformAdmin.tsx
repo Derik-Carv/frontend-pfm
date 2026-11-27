@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { notifyError, notifySuccess } from './services/toast'
 import {
   getSystemMetrics,
   getSystemHierarchy,
@@ -53,6 +54,16 @@ function formatUptime(seconds: number): string {
   return `${s}s`
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+const setCreateMotherError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+
 export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: PlatformAdminProps) {
   const [health, setHealth] = useState<SystemHealth | null>(null)
   const [stats, setStats] = useState<SystemStats | null>(null)
@@ -62,8 +73,6 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
   const [rejectingRequest, setRejectingRequest] = useState<CompanyRegistrationRequest | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([])
   const [auditTotal, setAuditTotal] = useState(0)
@@ -77,7 +86,6 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
   const [isCreateMotherOpen, setIsCreateMotherOpen] = useState(false)
   const [motherTradeName, setMotherTradeName] = useState('')
   const [isCreatingMother, setIsCreatingMother] = useState(false)
-  const [createMotherError, setCreateMotherError] = useState('')
 
   // Controle de expansão de Matrizes na cascata
   const [expandedMotherIds, setExpandedMotherIds] = useState<Set<string>>(new Set())
@@ -318,9 +326,6 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
           </button>
         </div>
       </div>
-
-      {error && <div className="management-message is-error">{error}</div>}
-      {notice && <div className="management-message is-success">{notice}</div>}
 
       {/* 1. CARDS SUPERIORES: TELEMETRIA E SAÚDE DO SISTEMA */}
       <section className="platform-metrics-grid">
@@ -844,12 +849,6 @@ export function PlatformAdminDashboard({ token, onLogout, onOpenDatabase }: Plat
                 ×
               </button>
             </div>
-
-            {createMotherError && (
-              <div className="management-message is-error" style={{ marginBottom: 12 }}>
-                {createMotherError}
-              </div>
-            )}
 
             <form className="branch-form" onSubmit={handleCreateMother}>
               <label>

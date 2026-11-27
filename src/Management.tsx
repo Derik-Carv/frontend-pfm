@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { apiRequest } from './services/api'
 import { anonymizeClient } from './services/privacy'
+import { notifyError, notifySuccess } from './services/toast'
 import './Management.css'
 
 type Client = {
@@ -82,6 +83,13 @@ function formatMoney(value: string | number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number.isFinite(amount) ? amount : 0)
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 function ManagementPanel({ view, role, token, onLogout, onDataChanged }: ManagementProps) {
   const [services, setServices] = useState<Service[]>([])
   const [clients, setClients] = useState<Client[]>([])
@@ -92,8 +100,6 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
   const [clientPageSize, setClientPageSize] = useState(10)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [serviceForm, setServiceForm] = useState<'create' | Service | null>(null)
   const [clientForm, setClientForm] = useState<'create' | Client | null>(null)
   const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
@@ -343,16 +349,6 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
     }
   }
 
-  function retry() {
-    setSearch('')
-    setError('')
-    setNotice('')
-    setIsLoading(true)
-    setServiceForm(null)
-    setClientForm(null)
-    setReloadCount((count) => count + 1)
-  }
-
   return (
     <section className="management-view" aria-labelledby="management-title">
       <header className="management-heading">
@@ -368,8 +364,6 @@ function ManagementPanel({ view, role, token, onLogout, onDataChanged }: Managem
         </div>
       </header>
 
-      {error && <div className="management-message is-error" role="alert"><span>{error}</span><button onClick={retry} type="button">Tentar novamente</button></div>}
-      {notice && <div className="management-message is-success" role="status"><span>{notice}</span><button onClick={() => setNotice('')} type="button" aria-label="Fechar aviso">×</button></div>}
       {!canManageServices && view === 'services' && <p className="management-empty">Seu perfil não possui acesso à listagem de serviços nesta área.</p>}
       {!canViewClients && view === 'clients' && <p className="management-empty">Seu perfil não possui acesso à listagem de clientes.</p>}
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { notifyError, notifySuccess } from './services/toast'
 import {
   getMyCompanies,
   createBranch,
@@ -19,6 +20,13 @@ type CompanySelectorProps = {
   onLogout: () => void
 }
 
+const setModalError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setModalSuccess = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 export function CompanySelector({
   token,
   role = '',
@@ -29,8 +37,6 @@ export function CompanySelector({
   const [isOpen, setIsOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [modalError, setModalError] = useState('')
-  const [modalSuccess, setModalSuccess] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
 
   const selectedCompanyId = getSelectedCompanyId()
@@ -243,17 +249,6 @@ export function CompanySelector({
                 ×
               </button>
             </div>
-
-            {modalError && (
-              <div className="management-message is-error" style={{ marginBottom: 14 }}>
-                {modalError}
-              </div>
-            )}
-            {modalSuccess && (
-              <div className="management-message is-success" style={{ marginBottom: 14 }}>
-                {modalSuccess}
-              </div>
-            )}
 
             <form className="branch-form" onSubmit={handleCreateBranch}>
               <label>

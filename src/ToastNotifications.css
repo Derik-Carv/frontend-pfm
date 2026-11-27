@@ -1,0 +1,127 @@
+.pfm-toast-stack {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: min(560px, calc(100vw - 28px));
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pfm-toast {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--ink);
+  box-shadow: var(--shadow-lg);
+  animation: pfm-toast-drop 180ms ease-out both;
+}
+
+.pfm-toast.is-error {
+  border-color: var(--danger-border);
+  background-color: var(--field-bg);
+  background-image: linear-gradient(var(--danger-bg), var(--danger-bg));
+  color: var(--danger-text);
+}
+
+.pfm-toast.is-warning {
+  border-color: var(--warning-border);
+  background-color: var(--field-bg);
+  background-image: linear-gradient(var(--warning-bg), var(--warning-bg));
+  color: var(--warning-text);
+}
+
+.pfm-toast.is-success {
+  border-color: var(--success-border);
+  background-color: var(--field-bg);
+  background-image: linear-gradient(var(--success-bg), var(--success-bg));
+  color: var(--success-text);
+}
+
+.pfm-toast.is-info {
+  border-color: var(--info-border);
+  background-color: var(--field-bg);
+  background-image: linear-gradient(var(--info-bg), var(--info-bg));
+  color: var(--info-text);
+}
+
+.pfm-toast-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pfm-toast-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pfm-toast-title {
+  font: 700 11px/1.1 var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pfm-toast-message {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.pfm-toast-details {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pfm-toast-close {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.pfm-toast-close:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+@keyframes pfm-toast-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

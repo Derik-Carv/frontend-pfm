@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { apiFileRequest, apiRequest, ApiRequestError } from './services/api'
 import { extractNfFields, type ExtractedNfFields, type NfPdfField } from './services/nfPdf'
+import { notifyError, notifySuccess } from './services/toast'
 import './NfPanel.css'
 
 type FiscalNote = {
@@ -113,6 +114,13 @@ async function loadAllClients(headers: HeadersInit) {
   return [...first.clients, ...rest.flatMap((page) => page.clients)]
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const canCreate = role === 'administrator' || role === 'company_admin' || role === 'finance'
   const headers = { Authorization: `Bearer ${token}` }
@@ -141,9 +149,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
   const [servicesLoadError, setServicesLoadError] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [deactivatingNote, setDeactivatingNote] = useState<FiscalNote | null>(null)
-  const [error, setError] = useState('')
-  const [errorDetails, setErrorDetails] = useState<string[]>([])
-  const [notice, setNotice] = useState('')
   const [sendingEmailNoteId, setSendingEmailNoteId] = useState<string | null>(null)
   const [emailModalNote, setEmailModalNote] = useState<FiscalNote | null>(null)
   const [emailModalDestination, setEmailModalDestination] = useState('')
@@ -306,7 +311,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
 
   async function openCreateForm() {
     setError('')
-    setErrorDetails([])
     setNotice('')
     setIsCreateOpen(true)
     setSelectedTypeId('')
@@ -359,7 +363,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     if (!canCreate) return
     setIsSaving(true)
     setError('')
-    setErrorDetails([])
     setNotice('')
     const data = new FormData(event.currentTarget)
     const file = data.get('file')
@@ -405,8 +408,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
         onLogout()
         return
       }
-      setError(responseMessage(saveError))
-      setErrorDetails(pdfInconsistencies(saveError))
+      notifyError(responseMessage(saveError), pdfInconsistencies(saveError))
     } finally {
       setIsSaving(false)
     }
@@ -564,7 +566,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     if (!deactivatingNote) return
     setIsSaving(true)
     setError('')
-    setErrorDetails([])
     const data = new FormData(event.currentTarget)
     const reason = String(data.get('reason') ?? '').trim()
     try {
@@ -598,7 +599,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
     setPdfParseState('idle')
     setPdfParseMessage('')
     setError('')
-    setErrorDetails([])
   }
 
   const firstRecord = pagination.total ? (pagination.page - 1) * pagination.limit + 1 : 0
@@ -617,9 +617,6 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
           {canCreate && <button className="management-primary" disabled={isCreateOpen} onClick={() => void openCreateForm()} type="button">Upload de NF</button>}
         </div>
       </header>
-
-      {error && <div className="management-message is-error" role="alert"><div><strong>{error}</strong>{errorDetails.length > 0 && <ul>{errorDetails.map((detail) => <li key={detail}>{detail}</li>)}</ul>}</div><button onClick={() => { setError(''); setErrorDetails([]) }} type="button" aria-label="Fechar erro">×</button></div>}
-      {notice && <div className="management-message is-success" role="status"><span>{notice}</span><button onClick={() => setNotice('')} type="button" aria-label="Fechar aviso">×</button></div>}
 
       {isCreateOpen && (
         <form className="management-form nf-form" onSubmit={submitNf}>
@@ -753,7 +750,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
                   {note.deactivationReason && <div className="nf-details-full"><span>Motivo da desativação</span><strong>{note.deactivationReason}</strong></div>}
                   {role !== 'observer' && (note.active && !note.cancelDate || !note.active) && (
                     <div className="nf-details-actions">
-                      {note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setErrorDetails([]); setDeactivatingNote(note) }} type="button">Desativar nota</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button">Reativar nota</button> : null}
+                      {note.active && !note.cancelDate ? <button className="nf-deactivate-button" onClick={() => { setError(''); setDeactivatingNote(note) }} type="button">Desativar nota</button> : !note.active ? <button className="nf-activate-button" onClick={() => void activateNf(note)} type="button">Reativar nota</button> : null}
                     </div>
                   )}
                 </div>
@@ -761,7 +758,7 @@ function NfPanel({ token, role, onLogout }: NfPanelProps) {
             </td></tr>}
             </Fragment>
             })}
-            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={4}>{error ? 'Não foi possível carregar as notas.' : 'Nenhuma nota fiscal encontrada.'}</td></tr>}
+            {!isLoading && !notes.length && <tr><td className="dashboard-table-empty" colSpan={4}>Nenhuma nota fiscal encontrada.</td></tr>}
           </tbody>
         </table>
       </div>

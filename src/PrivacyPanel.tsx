@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { notifyError, notifySuccess } from './services/toast'
 import {
   anonymizeMyAccount,
   exportMyPrivacyData,
@@ -21,11 +22,16 @@ function formatDateTime(value?: string | null) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString('pt-BR')
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 export function PrivacyPanel({ token, onLogout, onOpenLegal }: PrivacyPanelProps) {
   const [data, setData] = useState<PrivacyMeResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
 
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
@@ -37,8 +43,6 @@ export function PrivacyPanel({ token, onLogout, onOpenLegal }: PrivacyPanelProps
   const [anonymizing, setAnonymizing] = useState(false)
 
   const loadPrivacy = useCallback(async () => {
-    setLoading(true)
-    setError('')
     try {
       const response = await getPrivacyMe(token)
       setData(response)
@@ -57,8 +61,30 @@ export function PrivacyPanel({ token, onLogout, onOpenLegal }: PrivacyPanelProps
   }, [token, onLogout])
 
   useEffect(() => {
-    void loadPrivacy()
-  }, [loadPrivacy])
+    let active = true
+    void getPrivacyMe(token)
+      .then((response) => {
+        if (!active) return
+        setData(response)
+        setName(response.user.name)
+        setSurname(response.user.surname)
+      })
+      .catch((err) => {
+        if (!active) return
+        const msg = err instanceof Error ? err.message : 'Erro ao carregar dados de privacidade.'
+        if (/unauthorized|token|expirad/i.test(msg)) {
+          onLogout()
+          return
+        }
+        setError(msg)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [token, onLogout])
 
   async function handleSaveProfile(event: FormEvent) {
     event.preventDefault()
@@ -141,9 +167,6 @@ export function PrivacyPanel({ token, onLogout, onOpenLegal }: PrivacyPanelProps
           </button>
         </div>
       </div>
-
-      {error && <div className="management-message is-error">{error}</div>}
-      {notice && <div className="management-message is-success">{notice}</div>}
 
       {loading && !data ? (
         <div className="privacy-card"><p>Carregando informações de privacidade...</p></div>

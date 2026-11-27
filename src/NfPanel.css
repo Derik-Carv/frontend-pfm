@@ -70,11 +70,10 @@
 .nf-refresh:hover:not(:disabled) { border-color: var(--accent); background: var(--surface-subtle); }
 .nf-refresh:disabled { opacity: 0.55; cursor: wait; }
 .nf-table-scroll { max-height: min(58vh, 680px); }
-.nf-table { width: 100%; min-width: 0; table-layout: fixed; }
-.nf-table th { padding: 14px 16px; font-size: 11px; }
-.nf-table td { min-width: 0; padding: 17px 16px; font-size: 13px; line-height: 1.45; }
-.nf-table tr.is-clickable { cursor: pointer; transition: background 150ms ease; }
-.nf-table tr.is-clickable:hover { background: var(--row-hover); }
+.nf-table-scroll .nf-table { width: 100%; min-width: 0; table-layout: fixed; }
+.nf-table-scroll .nf-table td { min-width: 0; padding-block: 14px; line-height: 1.45; }
+.nf-table-scroll .nf-table tr.is-clickable { cursor: pointer; transition: background 150ms ease; }
+.nf-table-scroll .nf-table tr.is-clickable:hover { background: var(--row-hover); }
 .nf-table th:first-child, .nf-table td:first-child { width: 28%; min-width: 0; }
 .nf-table th:nth-child(2), .nf-table td:nth-child(2) { width: 38%; min-width: 0; }
 .nf-table th:nth-child(3), .nf-table td:nth-child(3) { width: 24%; min-width: 0; }

@@ -206,6 +206,89 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Global soft border & focus ring for all fillable and clickable controls */
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+select,
+textarea {
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']):hover:not(:disabled):not(:read-only):not(:focus),
+select:hover:not(:disabled):not(:focus),
+textarea:hover:not(:disabled):not(:read-only):not(:focus) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled) {
+  cursor: pointer;
+  transition: box-shadow 150ms ease;
+}
+
+input[type='checkbox']:not(:disabled):hover,
+input[type='radio']:not(:disabled):hover {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input[type='checkbox']:not(:disabled):focus-visible,
+input[type='radio']:not(:disabled):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+[role='tab']:not([aria-disabled='true']) {
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+button:not(:disabled):not(.text-button):not(.fin-link-btn):not(.pfm-toast-close):not(.dashboard-bar-item):not(.is-danger):hover,
+[role='button']:not([aria-disabled='true']):hover,
+[role='tab']:not([aria-disabled='true']):hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+button:not(:disabled):not(.text-button):not(.fin-link-btn):not(.pfm-toast-close):not(.dashboard-bar-item):not(.is-danger):focus-visible,
+[role='button']:not([aria-disabled='true']):focus-visible,
+[role='tab']:not([aria-disabled='true']):focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button.is-danger:not(:disabled):hover,
+button.is-danger:not(:disabled):focus-visible {
+  outline: none;
+  border-color: var(--danger-solid);
+  box-shadow: 0 0 0 2px var(--danger-bg);
+}
+
+.text-button:not(:disabled):hover,
+.fin-link-btn:not(:disabled):hover,
+.text-button:not(:disabled):focus-visible,
+.fin-link-btn:not(:disabled):focus-visible {
+  box-shadow: 0 2px 0 0 var(--accent-soft);
+}
+
+tr.is-clickable {
+  cursor: pointer;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+tr.is-clickable:hover {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
 ::selection {
   color: var(--heading);
   background: var(--accent-border);

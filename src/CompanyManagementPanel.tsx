@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { notifyError, notifySuccess } from './services/toast'
 import {
   getMyCompanies,
   listBranches,
@@ -38,6 +39,13 @@ function slugifyPreview(name: string): string {
     .replace(/[^a-z0-9]/g, '') || 'empresa'
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 export function CompanyManagementPanel({
   token,
   onLogout,
@@ -49,8 +57,6 @@ export function CompanyManagementPanel({
   const [branches, setBranches] = useState<Company[]>([])
   const [users, setUsers] = useState<CompanyUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
 
   // Modal de nova filial
@@ -277,9 +283,6 @@ export function CompanyManagementPanel({
           )}
         </div>
       </header>
-
-      {error && <div className="management-message is-error" role="alert">{error}</div>}
-      {notice && <div className="management-message is-success" role="status">{notice}</div>}
 
       {isLoading ? (
         <div className="management-loading">Carregando estrutura da empresa...</div>

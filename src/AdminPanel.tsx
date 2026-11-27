@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { apiRequest } from './services/api'
+import { notifyError, notifySuccess } from './services/toast'
 import { PlatformAdminDashboard } from './PlatformAdmin'
 import './AdminPanel.css'
 
@@ -142,6 +143,13 @@ function initialForm(table: AdminTable, record?: Record<string, unknown>): Recor
   }))
 }
 
+const setError = (msg: string) => {
+  if (msg) notifyError(msg)
+}
+const setNotice = (msg: string) => {
+  if (msg) notifySuccess(msg)
+}
+
 function AdminPanel({ token, onLogout }: AdminPanelProps) {
   const [adminTab, setAdminTab] = useState<'platform' | 'database'>('platform')
   const [table, setTable] = useState<AdminTable>('types')
@@ -151,8 +159,6 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
   const [status, setStatus] = useState<StatusFilter>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [editor, setEditor] = useState<{ id?: string; values: Record<string, FormValue> } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
@@ -324,9 +330,6 @@ function AdminPanel({ token, onLogout }: AdminPanelProps) {
         </label>
         <button className="management-secondary" disabled={isLoading} onClick={() => setReloadKey((current) => current + 1)} type="button">Atualizar</button>
       </div>
-
-      {error && <div className="management-message is-error" role="alert">{error}</div>}
-      {notice && <div className="management-message is-success" role="status">{notice}</div>}
 
       {editor && (
         <form className="management-form admin-editor" onSubmit={submitEditor}>

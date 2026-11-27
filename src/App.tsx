@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { apiRequest, clearTenantContext } from './services/api'
 import { acceptLegalDocuments, getPrivacyMe, getPublicLegalMetadata } from './services/privacy'
+import { notifyError, notifySuccess } from './services/toast'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
 import Dashboard from './Dashboard'
 import './App.css'
@@ -38,8 +39,6 @@ function App() {
   )
   const [screen, setScreen] = useState<Screen>('login')
   const [username, setUsername] = useState('')
-  const [message, setMessage] = useState('')
-  const [isError, setIsError] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [token, setToken] = useState(() => localStorage.getItem('token'))
   const [passwordChangeRequired, setPasswordChangeRequired] = useState(() => localStorage.getItem('passwordChangeRequired') === 'true')
@@ -75,8 +74,12 @@ function App() {
   }, [theme])
 
   function showMessage(text: string, error = false) {
-    setMessage(text)
-    setIsError(error)
+    if (!text.trim()) return
+    if (error) {
+      notifyError(text)
+    } else {
+      notifySuccess(text)
+    }
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -477,7 +480,6 @@ function App() {
                   <span aria-hidden="true">→</span>
                 </button>
               </form>
-              {message && <p className={`form-message${isError ? ' is-error' : ''}`} role="status">{message}</p>}
               <button className="text-button password-logout" onClick={handleLogout} type="button">Sair</button>
             </div>
           </section>
@@ -508,7 +510,6 @@ function App() {
               <span aria-hidden="true">→</span>
             </button>
           </form>
-          {message && <p className={`form-message${isError ? ' is-error' : ''}`} role="status">{message}</p>}
           <button className="text-button password-logout" onClick={handleLogout} type="button">Sair</button>
         </div>
       </section>
@@ -758,12 +759,6 @@ function App() {
                     </button>
                   </div>
                 </form>
-              )}
-
-              {message && (
-                <p className={`form-message${isError ? ' is-error' : ''}`} role="status">
-                  {message}
-                </p>
               )}
 
               <p className="switch-prompt">

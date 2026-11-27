@@ -198,6 +198,7 @@ export async function triggerLgpdCleanup(token: string): Promise<{
   scrubbedRequestHashes: number
   deletedRejectedRequests: number
   deletedExpiredAuditLogs: number
+  deletedExpiredIncidents?: number
 }> {
   return apiRequest('/admin/lgpd/cleanup', {
     method: 'POST',
