@@ -3,10 +3,11 @@ import { apiRequest, clearTenantContext } from './services/api'
 import { acceptLegalDocuments, getPrivacyMe, getPublicLegalMetadata } from './services/privacy'
 import { notifyError, notifySuccess } from './services/toast'
 import { LegalDocumentsModal, type LegalDocKind } from './LegalDocumentsModal'
+import PlatformPresentation from './PlatformPresentation'
 import Dashboard from './Dashboard'
 import './App.css'
 
-type Screen = 'login' | 'register' | 'forgot'
+type Screen = 'login' | 'register' | 'forgot' | 'presentation'
 type Theme = 'dark' | 'light'
 
 type CompanyRequestDraft = {
@@ -37,7 +38,16 @@ function App() {
   const [theme, setTheme] = useState<Theme>(() =>
     localStorage.getItem('theme') === 'light' ? 'light' : 'dark',
   )
-  const [screen, setScreen] = useState<Screen>('login')
+  const [screen, setScreen] = useState<Screen>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase()
+      const search = window.location.search.toLowerCase()
+      if (hash === '#apresentacao' || search.includes('apresentacao')) {
+        return 'presentation'
+      }
+    }
+    return 'login'
+  })
   const [username, setUsername] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [token, setToken] = useState(() => localStorage.getItem('token'))
@@ -514,6 +524,23 @@ function App() {
         </div>
       </section>
     </main>
+  ) : screen === 'presentation' ? (
+    <PlatformPresentation
+      dpoEmail={dpoEmail}
+      onBackToLogin={() => {
+        setScreen('login')
+        if (window.location.hash === '#apresentacao') {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
+      }}
+      onOpenLegal={setLegalModalDoc}
+      onRequestAccess={() => {
+        setScreen('register')
+        setRegisterStep('form')
+      }}
+      onThemeChange={setTheme}
+      theme={theme}
+    />
   ) : (
     <main className="auth-shell">
       <div className="theme-switch" role="group" aria-label="Tema da tela">
@@ -785,6 +812,22 @@ function App() {
                   {screen === 'login' ? 'Solicitar cadastro' : 'Voltar para o login'}
                 </button>
               </p>
+              {screen === 'login' && (
+                <button
+                  className="auth-presentation-shortcut"
+                  onClick={() => {
+                    setScreen('presentation')
+                    showMessage('')
+                  }}
+                  type="button"
+                >
+                  <div>
+                    <strong>Conheça a plataforma PFM</strong>
+                    <span>Veja o demonstrativo e o roadmap Financeiro &amp; Contábil</span>
+                  </div>
+                  <span className="auth-shortcut-arrow" aria-hidden="true">→</span>
+                </button>
+              )}
           </>
           <p className="form-footnote">
             © 2026 PFM ·{' '}
