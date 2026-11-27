@@ -38,6 +38,11 @@ export function CompanySelector({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const onTenantChangedRef = useRef(onTenantChanged)
+
+  useEffect(() => {
+    onTenantChangedRef.current = onTenantChanged
+  }, [onTenantChanged])
 
   const selectedCompanyId = getSelectedCompanyId()
   const viewScope = getViewScope()
@@ -68,7 +73,7 @@ export function CompanySelector({
         const isValidSelection = Boolean(storedCompanyId && response.companies.some((c) => c.id === storedCompanyId))
         if (!isValidSelection && response.activeCompanyId) {
           setTenantContext(response.activeCompanyId, 'single')
-          onTenantChanged()
+          onTenantChangedRef.current()
         }
       } catch (err) {
         if (err instanceof Error && 'status' in err && err.status === 401) {

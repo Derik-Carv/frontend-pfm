@@ -207,7 +207,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [overview, setOverview] = useState<Overview | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 10, total: 0, totalPages: 0, hasMore: false })
-  const [isOverviewLoading, setIsOverviewLoading] = useState(!isPlatformAdmin)
+  const [overviewLoadingState, setOverviewLoadingState] = useState(!isPlatformAdmin)
   const [isLoading, setIsLoading] = useState(!isPlatformAdmin)
   const [refreshing, setRefreshing] = useState(0)
   const [search, setSearch] = useState('')
@@ -215,9 +215,13 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [detail, setDetail] = useState<Detail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
-  const [activeArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'finance' | 'company' | 'admin' | 'privacy'>(
+  const [selectedArea, setActiveArea] = useState<'overview' | 'services' | 'clients' | 'nf' | 'finance' | 'company' | 'admin' | 'privacy'>(
     isPlatformAdmin ? 'admin' : 'overview',
   )
+  const isOverviewLoading = !isPlatformAdmin && overviewLoadingState
+  const activeArea = isPlatformAdmin
+    ? (selectedArea === 'privacy' ? 'privacy' : 'admin')
+    : (selectedArea === 'admin' ? 'overview' : selectedArea)
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDocKind | null>(null)
   const [dpoEmail, setDpoEmail] = useState('')
 
@@ -232,14 +236,6 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
       active = false
     }
   }, [])
-
-  useEffect(() => {
-    if (isPlatformAdmin && activeArea !== 'privacy') {
-      setActiveArea('admin')
-    } else if (!isPlatformAdmin && activeArea === 'admin') {
-      setActiveArea('overview')
-    }
-  }, [isPlatformAdmin])
 
   // BI Interactivity States
   const [selectedKpiFilter, setSelectedKpiFilter] = useState<'all' | 'finished' | 'pending' | null>(null)
@@ -259,12 +255,11 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
   useEffect(() => {
     let active = true
     if (isPlatformAdmin) {
-      setIsOverviewLoading(false)
       return () => { active = false }
     }
 
     async function loadDashboard() {
-      setIsOverviewLoading(true)
+      setOverviewLoadingState(true)
       const headers = { Authorization: `Bearer ${token}` }
       try {
         const overviewResult = await apiRequest<{ data: Overview }>('/home/services/index', { headers })
@@ -278,7 +273,7 @@ function Dashboard({ token, theme, onThemeChange, onLogout }: DashboardProps) {
         }
         setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar o painel analítico.')
       } finally {
-        if (active) setIsOverviewLoading(false)
+        if (active) setOverviewLoadingState(false)
       }
     }
 
