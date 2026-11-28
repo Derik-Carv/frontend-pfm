@@ -5,7 +5,7 @@ import './PlatformPresentation.css'
 type Theme = 'dark' | 'light'
 type DemoTab = 'finance' | 'bi' | 'nf' | 'governance'
 type FinanceFilter = 'all' | 'receivable' | 'payable' | 'overdue'
-type UnitKey = 'consolidated' | 'matriz' | 'filial_campinas'
+type UnitKey = 'consolidated' | 'matriz' | 'filial_01'
 type RoadmapTrack = 'all' | 'finance' | 'accounting'
 
 export type PlatformPresentationProps = {
@@ -104,14 +104,14 @@ const practicalRoutineSteps = [
   {
     step: 'Passo 1 · Serviço fechado',
     title: 'Você cadastra o cliente e o serviço',
-    example: 'Ex.: Fechou um serviço de R$ 6.000,00 para a empresa Data Home.',
+    example: 'Ex.: Fechou um serviço de R$ 6.000,00 para o Cliente Exemplo 01.',
     detail:
       'O serviço fica registrado com cliente, datas e acompanhamento de andamento (na fila, em execução ou finalizado).',
   },
   {
     step: 'Passo 2 · Nota fiscal anexada',
     title: 'Você sobe o PDF da nota e o sistema lê os dados',
-    example: 'Ex.: Seleciona o PDF da NF 142 e os campos são preenchidos na hora.',
+    example: 'Ex.: Seleciona o PDF da NF 000002 e os campos são preenchidos na hora.',
     detail:
       'O arquivo fica guardado com segurança para consultar, baixar ou enviar por e-mail para o cliente com 1 clique.',
   },
@@ -136,7 +136,7 @@ const demoFinanceEntries: DemoFinanceEntry[] = [
     id: 'fin-1',
     type: 'receivable',
     description: 'Mensalidade de Suporte e Sistema — Plano Empresarial',
-    counterparty: 'TechSul Logística LTDA',
+    counterparty: 'Cliente Exemplo 01 · Logística',
     category: 'Receita de Mensalidades',
     costCenter: 'Comercial',
     installmentLabel: 'Parcela 3 de 12 · Todo dia 10',
@@ -148,8 +148,8 @@ const demoFinanceEntries: DemoFinanceEntry[] = [
   {
     id: 'fin-2',
     type: 'receivable',
-    description: 'Implantação de Sistema (NF 00142)',
-    counterparty: 'Grupo Horizonte Engenharia',
+    description: 'Implantação de Sistema (NF 000002)',
+    counterparty: 'Cliente Exemplo 02 · Engenharia',
     category: 'Receita de Serviços',
     costCenter: 'Projetos',
     installmentLabel: 'Parcela 1 de 2 · Todo dia 15',
@@ -162,20 +162,20 @@ const demoFinanceEntries: DemoFinanceEntry[] = [
     id: 'fin-3',
     type: 'receivable',
     description: 'Consultoria Operacional Trimestral',
-    counterparty: 'Data Home Serviços LTDA',
+    counterparty: 'Cliente Exemplo 03 · Serviços',
     category: 'Receita de Serviços',
     costCenter: 'Projetos',
     installmentLabel: 'Pagamento único',
     dueDate: '25/11/2026',
-    amount: 2340,
+    amount: 3200,
     status: 'paid',
-    settlementNote: 'Recebimento confirmado na Conta Cora Matriz (histórico salvo).',
+    settlementNote: 'Recebimento confirmado na Conta Bancária Matriz (Exemplo) (histórico salvo).',
   },
   {
     id: 'fin-4',
     type: 'payable',
     description: 'Servidor em Nuvem & Backups',
-    counterparty: 'Provedor Nuvem Brasil S.A.',
+    counterparty: 'Fornecedor Exemplo · Hospedagem',
     category: 'Custos Operacionais',
     costCenter: 'Tecnologia',
     installmentLabel: 'Parcela 2 de 3 · Todo dia 05',
@@ -188,7 +188,7 @@ const demoFinanceEntries: DemoFinanceEntry[] = [
     id: 'fin-5',
     type: 'payable',
     description: 'Assinatura de Ferramentas da Equipe',
-    counterparty: 'Google Cloud Brasil',
+    counterparty: 'Fornecedor Exemplo · Ferramentas',
     category: 'Despesas Administrativas',
     costCenter: 'Diretoria',
     installmentLabel: 'Parcela 1 de 3 · Todo dia 20',
@@ -208,65 +208,65 @@ const demoBiByUnit: Record<UnitKey, DemoBiUnitData> = {
     completedCount: 19,
     pendingCount: 4,
     bars: [
-      { name: 'Implantação de Gestão & Painel', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
-      { name: 'Acompanhamento Mensal', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
-      { name: 'Automação Financeira', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 57 },
-      { name: 'Organização de Notas por Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 44 },
+      { name: 'Implantação de Gestão & Painel', client: 'Cliente Exemplo 01 · Logística', value: 42500, sharePercent: 100 },
+      { name: 'Acompanhamento Mensal', client: 'Cliente Exemplo 02 · Engenharia', value: 31800, sharePercent: 75 },
+      { name: 'Automação Financeira', client: 'Cliente Exemplo 03 · Serviços', value: 24400, sharePercent: 57 },
+      { name: 'Organização de Notas por Filial', client: 'Cliente Exemplo 04 · Comércio', value: 18900, sharePercent: 44 },
     ],
   },
   matriz: {
-    label: 'Matriz · São Paulo',
+    label: 'Unidade Matriz (Exemplo)',
     scopeTag: 'Somente unidade Matriz',
     receivableTotal: 102400,
     averageTicket: 6826.67,
     completedCount: 13,
     pendingCount: 2,
     bars: [
-      { name: 'Implantação de Gestão & Painel', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
-      { name: 'Acompanhamento Mensal', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
-      { name: 'Consultoria Financeira', client: 'Atlântica Participações', value: 16200, sharePercent: 38 },
-      { name: 'Revisão Operacional', client: 'Alpha Serviços LTDA', value: 11900, sharePercent: 28 },
+      { name: 'Implantação de Gestão & Painel', client: 'Cliente Exemplo 01 · Logística', value: 42500, sharePercent: 100 },
+      { name: 'Acompanhamento Mensal', client: 'Cliente Exemplo 02 · Engenharia', value: 31800, sharePercent: 75 },
+      { name: 'Consultoria Financeira', client: 'Cliente Exemplo 05 · Consultoria', value: 16200, sharePercent: 38 },
+      { name: 'Revisão Operacional', client: 'Cliente Exemplo 06 · Operações', value: 11900, sharePercent: 28 },
     ],
   },
-  filial_campinas: {
-    label: 'Filial · Campinas',
-    scopeTag: 'Somente unidade Filial Campinas',
+  filial_01: {
+    label: 'Unidade Filial 01 (Exemplo)',
+    scopeTag: 'Somente unidade Filial 01',
     receivableTotal: 46500,
     averageTicket: 5812.5,
     completedCount: 6,
     pendingCount: 2,
     bars: [
-      { name: 'Automação Financeira', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 100 },
-      { name: 'Organização de Notas por Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 77 },
-      { name: 'Treinamento da Equipe', client: 'Vanguard Indústria', value: 3200, sharePercent: 13 },
+      { name: 'Automação Financeira', client: 'Cliente Exemplo 03 · Serviços', value: 24400, sharePercent: 100 },
+      { name: 'Organização de Notas por Filial', client: 'Cliente Exemplo 04 · Comércio', value: 18900, sharePercent: 77 },
+      { name: 'Treinamento da Equipe', client: 'Cliente Exemplo 07 · Indústria', value: 3200, sharePercent: 13 },
     ],
   },
 }
 
 const demoNfs: DemoNfItem[] = [
   {
-    id: 'nf-142',
-    numberNf: '000142',
-    client: 'Grupo Horizonte Engenharia',
+    id: 'nf-002',
+    numberNf: '000002',
+    client: 'Cliente Exemplo 02 · Engenharia',
     emissionDate: '12/11/2026',
     totalValue: 7200,
     status: 'Ativa',
-    accessKey: '35261112345678000195550010000001421000014210',
+    accessKey: '00000000000000000000000000000000000000000002',
     serviceName: 'Implantação de Sistema e Integração',
-    fileName: 'NF-000142-grupo-horizonte.pdf',
+    fileName: 'NF-000002-cliente-exemplo-02.pdf',
     linkedEntry: 'Cobrança gerada em 2 parcelas de R$ 3.600,00',
   },
   {
-    id: 'nf-141',
-    numberNf: '000141',
-    client: 'Data Home Serviços LTDA',
+    id: 'nf-001',
+    numberNf: '000001',
+    client: 'Cliente Exemplo 03 · Serviços',
     emissionDate: '08/11/2026',
-    totalValue: 2340,
+    totalValue: 3200,
     status: 'Ativa',
-    accessKey: '35261198765432000110550010000001411000014118',
+    accessKey: '00000000000000000000000000000000000000000001',
     serviceName: 'Consultoria Operacional Trimestral',
-    fileName: 'NF-000141-data-home.pdf',
-    linkedEntry: 'Recebimento já confirmado na Conta Cora Matriz',
+    fileName: 'NF-000001-cliente-exemplo-03.pdf',
+    linkedEntry: 'Recebimento já confirmado na Conta Bancária Matriz (Exemplo)',
   },
 ]
 
@@ -463,7 +463,7 @@ function PlatformPresentation({
   const [activeTab, setActiveTab] = useState<DemoTab>('finance')
   const [financeFilter, setFinanceFilter] = useState<FinanceFilter>('all')
   const [selectedUnit, setSelectedUnit] = useState<UnitKey>('consolidated')
-  const [expandedNfId, setExpandedNfId] = useState<string | null>('nf-142')
+  const [expandedNfId, setExpandedNfId] = useState<string | null>('nf-002')
   const [roadmapTrack, setRoadmapTrack] = useState<RoadmapTrack>('all')
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
 
@@ -858,14 +858,14 @@ function PlatformPresentation({
                       onClick={() => setSelectedUnit('matriz')}
                       type="button"
                     >
-                      Matriz · SP
+                      Unidade Matriz
                     </button>
                     <button
-                      aria-pressed={selectedUnit === 'filial_campinas'}
-                      onClick={() => setSelectedUnit('filial_campinas')}
+                      aria-pressed={selectedUnit === 'filial_01'}
+                      onClick={() => setSelectedUnit('filial_01')}
                       type="button"
                     >
-                      Filial · Campinas
+                      Unidade Filial 01
                     </button>
                   </div>
                 </div>
