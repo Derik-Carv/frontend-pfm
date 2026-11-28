@@ -822,8 +822,8 @@ function App() {
                   type="button"
                 >
                   <div>
-                    <strong>Conheça a plataforma PFM</strong>
-                    <span>Veja o demonstrativo e o roadmap Financeiro &amp; Contábil</span>
+                    <strong>Conheça o PFM na prática</strong>
+                    <span>Veja como funciona no dia a dia, o demonstrativo e as próximas novidades</span>
                   </div>
                   <span className="auth-shortcut-arrow" aria-hidden="true">→</span>
                 </button>

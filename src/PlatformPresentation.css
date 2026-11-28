@@ -872,6 +872,188 @@
   line-height: 1.55;
 }
 
+.pres-audience-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pres-audience-card {
+  padding: 18px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+  box-shadow: var(--shadow-xs);
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.pres-audience-card h3 {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  line-height: 1.3;
+}
+
+.pres-audience-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pres-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pres-compare-card {
+  padding: 20px 22px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pres-compare-card.is-before {
+  border-top: 3px solid var(--danger-border);
+}
+
+.pres-compare-card.is-after {
+  border-top: 3px solid var(--success-solid);
+}
+
+.pres-compare-tag {
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+}
+
+.pres-compare-tag.is-good {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+.pres-compare-card h3 {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-heading);
+  font-size: 17px;
+}
+
+.pres-routine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.pres-routine-card {
+  padding: 18px;
+  border: 1px solid var(--field-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pres-routine-step {
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pres-routine-card h3 {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  line-height: 1.3;
+}
+
+.pres-routine-example {
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.pres-routine-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.pres-faq-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pres-faq-item {
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  background: var(--field-bg);
+  overflow: hidden;
+  transition: border-color 150ms ease;
+}
+
+.pres-faq-item.is-open {
+  border-color: var(--accent);
+}
+
+.pres-faq-trigger {
+  width: 100%;
+  padding: 15px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--heading);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.pres-faq-icon {
+  color: var(--accent-text);
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pres-faq-answer {
+  margin: 0;
+  padding: 0 18px 16px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
 .pres-cta-band {
   padding: 28px;
   border: 1px solid var(--accent-border);
@@ -928,11 +1110,14 @@
   }
 
   .pres-cards-grid,
-  .pres-roadmap-grid {
+  .pres-roadmap-grid,
+  .pres-audience-grid,
+  .pres-routine-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .pres-gov-grid {
+  .pres-gov-grid,
+  .pres-compare-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -945,6 +1130,8 @@
   .pres-kpi-grid,
   .pres-cards-grid,
   .pres-roadmap-grid,
+  .pres-audience-grid,
+  .pres-routine-grid,
   .pres-steps-row,
   .pres-nf-detail-box {
     grid-template-columns: 1fr;

@@ -47,7 +47,7 @@ type DemoNfItem = {
   client: string
   emissionDate: string
   totalValue: number
-  status: 'Ativa' | 'Emitida'
+  status: 'Ativa'
   accessKey: string
   serviceName: string
   fileName: string
@@ -63,114 +63,182 @@ function formatMoney(value: number) {
   return currencyFormatter.format(value)
 }
 
+const audienceProfiles = [
+  {
+    title: 'Prestadores de Serviço & Consultorias',
+    description:
+      'Para quem fecha projetos ou contratos e quer enxergar o que foi entregue, faturado e realmente recebido.',
+  },
+  {
+    title: 'Pequenas e Médias Empresas',
+    description:
+      'Para negócios que querem sair das planilhas espalhadas e centralizar clientes, notas e financeiro sem burocracia.',
+  },
+  {
+    title: 'Empresas com Cobranças Parceladas',
+    description:
+      'Para quem vende em várias parcelas ou tem contas fixas todo mês e não quer perder datas de vencimento.',
+  },
+  {
+    title: 'Negócios com 1 CNPJ ou Matriz + Filiais',
+    description:
+      'Funciona perfeitamente para uma empresa única e já cresce pronto para gerenciar outras unidades no mesmo lugar.',
+  },
+]
+
+const beforeItems = [
+  'Serviços anotados em planilha, notas fiscais em pastas no computador e cobranças no WhatsApp.',
+  'Dificuldade para saber quanto realmente vai entrar e sair do caixa nas próximas semanas.',
+  'Risco de esquecer uma parcela em atraso ou perder o comprovante de pagamento de um cliente.',
+  'Dependência de horas conferindo extratos e procurando PDFs toda vez que o contador pede os documentos do mês.',
+]
+
+const afterItems = [
+  'Clientes, serviços, notas fiscais e contas a pagar/receber conectados em um único painel simples.',
+  'Visão imediata do dinheiro em conta, valores a receber, contas a vencer e parcelas atrasadas.',
+  'Lançamento parcelado em segundos: basta informar o valor total, quantas parcelas e o dia fixo do mês.',
+  'Cada pessoa da equipe vê apenas o que precisa, com histórico protegido e organização pronta para o contador.',
+]
+
+const practicalRoutineSteps = [
+  {
+    step: 'Passo 1 · Serviço fechado',
+    title: 'Você cadastra o cliente e o serviço',
+    example: 'Ex.: Fechou um serviço de R$ 6.000,00 para a empresa Data Home.',
+    detail:
+      'O serviço fica registrado com cliente, datas e acompanhamento de andamento (na fila, em execução ou finalizado).',
+  },
+  {
+    step: 'Passo 2 · Nota fiscal anexada',
+    title: 'Você sobe o PDF da nota e o sistema lê os dados',
+    example: 'Ex.: Seleciona o PDF da NF 142 e os campos são preenchidos na hora.',
+    detail:
+      'O arquivo fica guardado com segurança para consultar, baixar ou enviar por e-mail para o cliente com 1 clique.',
+  },
+  {
+    step: 'Passo 3 · Cobrança parcelada',
+    title: 'O sistema divide as parcelas automaticamente',
+    example: 'Ex.: R$ 6.000,00 em 3 parcelas de R$ 2.000,00 vencendo todo dia 10.',
+    detail:
+      'Você escolhe se quer informar o valor total ou da parcela, define a área responsável e o dia fixo de vencimento.',
+  },
+  {
+    step: 'Passo 4 · Dinheiro no caixa',
+    title: 'Você registra o pagamento e acompanha o saldo real',
+    example: 'Ex.: Cliente pagou a 1ª parcela? Dê baixa total ou parcial com data e conta.',
+    detail:
+      'O saldo da conta atualiza automaticamente e o painel mostra quanto entrou, o que falta receber e se há atrasos.',
+  },
+]
+
 const demoFinanceEntries: DemoFinanceEntry[] = [
   {
     id: 'fin-1',
     type: 'receivable',
-    description: 'Mensalidade Plataforma B2B — Plano Corporativo',
+    description: 'Mensalidade de Suporte e Sistema — Plano Empresarial',
     counterparty: 'TechSul Logística LTDA',
-    category: '1.02 · Receita de Assinaturas',
-    costCenter: '001 · COMERCIAL',
-    installmentLabel: 'Parcela 3/12 · Dia fixo 10',
+    category: 'Receita de Mensalidades',
+    costCenter: 'Comercial',
+    installmentLabel: 'Parcela 3 de 12 · Todo dia 10',
     dueDate: '10/12/2026',
     amount: 4850,
     status: 'pending',
-    settlementNote: 'Título gerado automaticamente pelo contrato de serviço.',
+    settlementNote: 'Gerado direto do cadastro de serviços do cliente.',
   },
   {
     id: 'fin-2',
     type: 'receivable',
-    description: 'Implantação e Integração Fiscal (NF 00142)',
+    description: 'Implantação de Sistema (NF 00142)',
     counterparty: 'Grupo Horizonte Engenharia',
-    category: '1.01 · Prestação de Serviços',
-    costCenter: '002 · PROJETOS',
-    installmentLabel: 'Parcela 1/2 · Dia fixo 15',
+    category: 'Receita de Serviços',
+    costCenter: 'Projetos',
+    installmentLabel: 'Parcela 1 de 2 · Todo dia 15',
     dueDate: '15/11/2026',
     amount: 7200,
     status: 'overdue',
-    settlementNote: 'Sinalizado no aging de inadimplência (12 dias em aberto).',
+    settlementNote: 'Atrasado há 12 dias · sinalizado no resumo para cobrança.',
   },
   {
     id: 'fin-3',
     type: 'receivable',
     description: 'Consultoria Operacional Trimestral',
     counterparty: 'Data Home Serviços LTDA',
-    category: '1.01 · Prestação de Serviços',
-    costCenter: '002 · PROJETOS',
-    installmentLabel: 'À vista',
+    category: 'Receita de Serviços',
+    costCenter: 'Projetos',
+    installmentLabel: 'Pagamento único',
     dueDate: '25/11/2026',
     amount: 2340,
     status: 'paid',
-    settlementNote: 'Baixa integral liquidada na Conta Cora Matriz (registro imutável).',
+    settlementNote: 'Recebimento confirmado na Conta Cora Matriz (histórico salvo).',
   },
   {
     id: 'fin-4',
     type: 'payable',
-    description: 'Infraestrutura Cloud & Observabilidade',
+    description: 'Servidor em Nuvem & Backups',
     counterparty: 'Provedor Nuvem Brasil S.A.',
-    category: '2.01 · Custos de Hospedagem / Infra',
-    costCenter: '003 · TECNOLOGIA',
-    installmentLabel: 'Parcela 2/3 · Dia fixo 05',
+    category: 'Custos Operacionais',
+    costCenter: 'Tecnologia',
+    installmentLabel: 'Parcela 2 de 3 · Todo dia 05',
     dueDate: '05/12/2026',
     amount: 1680,
     status: 'pending',
-    settlementNote: 'Previsto no fluxo de caixa projetado para os próximos 30 dias.',
+    settlementNote: 'Já considerado na previsão de pagamentos dos próximos 30 dias.',
   },
   {
     id: 'fin-5',
     type: 'payable',
-    description: 'Assinatura Ferramentas Corporativas',
+    description: 'Assinatura de Ferramentas da Equipe',
     counterparty: 'Google Cloud Brasil',
-    category: '3.02 · Despesas Administrativas',
-    costCenter: '001 · DIRETORIA',
-    installmentLabel: 'Parcela 1/3 · Dia fixo 20',
+    category: 'Despesas Administrativas',
+    costCenter: 'Diretoria',
+    installmentLabel: 'Parcela 1 de 3 · Todo dia 20',
     dueDate: '20/11/2026',
     amount: 600,
     status: 'partial',
-    settlementNote: 'R$ 200,00 baixados parcialmente; saldo em aberto de R$ 400,00.',
+    settlementNote: 'R$ 200,00 já pagos · faltam R$ 400,00 para quitar.',
   },
 ]
 
 const demoBiByUnit: Record<UnitKey, DemoBiUnitData> = {
   consolidated: {
-    label: 'Todas as Unidades (Consolidado)',
-    scopeTag: 'Matriz + Filial · Visão do Grupo',
+    label: 'Todas as Unidades (Visão Geral do Grupo)',
+    scopeTag: 'Soma da Matriz + Filial',
     receivableTotal: 148900,
     averageTicket: 6473.91,
     completedCount: 19,
     pendingCount: 4,
     bars: [
-      { name: 'Implantação ERP & BI Corporativo', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
-      { name: 'Sustentação Fiscal & Mensalidades', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
-      { name: 'Automação de Fluxo Financeiro', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 57 },
-      { name: 'Auditoria Documental Multi-Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 44 },
+      { name: 'Implantação de Gestão & Painel', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
+      { name: 'Acompanhamento Mensal', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
+      { name: 'Automação Financeira', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 57 },
+      { name: 'Organização de Notas por Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 44 },
     ],
   },
   matriz: {
     label: 'Matriz · São Paulo',
-    scopeTag: 'Unidade Principal · CNPJ Matriz',
+    scopeTag: 'Somente unidade Matriz',
     receivableTotal: 102400,
     averageTicket: 6826.67,
     completedCount: 13,
     pendingCount: 2,
     bars: [
-      { name: 'Implantação ERP & BI Corporativo', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
-      { name: 'Sustentação Fiscal & Mensalidades', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
-      { name: 'Consultoria Financeira Estratégica', client: 'Atlântica Participações', value: 16200, sharePercent: 38 },
-      { name: 'Revisão de Processos Operacionais', client: 'Alpha Serviços LTDA', value: 11900, sharePercent: 28 },
+      { name: 'Implantação de Gestão & Painel', client: 'TechSul Logística LTDA', value: 42500, sharePercent: 100 },
+      { name: 'Acompanhamento Mensal', client: 'Grupo Horizonte Engenharia', value: 31800, sharePercent: 75 },
+      { name: 'Consultoria Financeira', client: 'Atlântica Participações', value: 16200, sharePercent: 38 },
+      { name: 'Revisão Operacional', client: 'Alpha Serviços LTDA', value: 11900, sharePercent: 28 },
     ],
   },
   filial_campinas: {
     label: 'Filial · Campinas',
-    scopeTag: 'Filial Operacional · Visão Isolada',
+    scopeTag: 'Somente unidade Filial Campinas',
     receivableTotal: 46500,
     averageTicket: 5812.5,
     completedCount: 6,
     pendingCount: 2,
     bars: [
-      { name: 'Automação de Fluxo Financeiro', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 100 },
-      { name: 'Auditoria Documental Multi-Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 77 },
-      { name: 'Treinamento Equipe Financeira', client: 'Vanguard Indústria', value: 3200, sharePercent: 13 },
+      { name: 'Automação Financeira', client: 'Data Home Serviços LTDA', value: 24400, sharePercent: 100 },
+      { name: 'Organização de Notas por Filial', client: 'Norte Sul Comércio S.A.', value: 18900, sharePercent: 77 },
+      { name: 'Treinamento da Equipe', client: 'Vanguard Indústria', value: 3200, sharePercent: 13 },
     ],
   },
 }
@@ -184,9 +252,9 @@ const demoNfs: DemoNfItem[] = [
     totalValue: 7200,
     status: 'Ativa',
     accessKey: '35261112345678000195550010000001421000014210',
-    serviceName: 'Implantação e Integração Fiscal',
+    serviceName: 'Implantação de Sistema e Integração',
     fileName: 'NF-000142-grupo-horizonte.pdf',
-    linkedEntry: 'Título a Receber em 2 parcelas (R$ 3.600,00 cada)',
+    linkedEntry: 'Cobrança gerada em 2 parcelas de R$ 3.600,00',
   },
   {
     id: 'nf-141',
@@ -198,46 +266,46 @@ const demoNfs: DemoNfItem[] = [
     accessKey: '35261198765432000110550010000001411000014118',
     serviceName: 'Consultoria Operacional Trimestral',
     fileName: 'NF-000141-data-home.pdf',
-    linkedEntry: 'Baixado integralmente na Conta Cora Matriz',
+    linkedEntry: 'Recebimento já confirmado na Conta Cora Matriz',
   },
 ]
 
 const activeCapabilities = [
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Gestão Financeira — Fase 1 em Produção',
+    tag: 'Disponível agora',
+    title: 'Contas a Pagar e a Receber',
     description:
-      'Contas a pagar e a receber com cálculo exato em centavos, parcelamento automático com dia fixo de vencimento, centros de custo, categorias gerenciais, fluxo de caixa realizado/projetado, aging de inadimplência, baixas imutáveis, estornos e exportação CSV protegida.',
+      'Controle o dinheiro que entra e sai com parcelamento automático, escolha do dia fixo de vencimento, áreas da empresa (centros de custo), previsão de caixa, lista de atrasados e exportação em planilha.',
   },
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Painel Analítico (BI & Analytics)',
+    tag: 'Disponível agora',
+    title: 'Painel de Resultados do Negócio',
     description:
-      'Indicadores executivos em tempo real, gráficos interativos com filtro cruzado por serviço, cliente, faixa de valor e período, além de visão detalhada sob demanda sem risco de alteração acidental.',
+      'Veja o total vendido, valor médio por serviço, o que já foi concluído e o que está pendente em gráficos fáceis de clicar para filtrar por cliente, valor ou data.',
   },
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Notas Fiscais com Leitura Automática de PDF',
+    tag: 'Disponível agora',
+    title: 'Notas Fiscais com Leitura de PDF',
     description:
-      'Leitura local do PDF no navegador para extrair número, chave de acesso, data e valor, validação cruzada no servidor, visualização em modal, guarda segura dos anexos e envio por e-mail ao cliente.',
+      'Ao selecionar o PDF da nota fiscal, o PFM lê número, chave, data e valor automaticamente para você não precisar digitar tudo, guarda o arquivo e envia por e-mail para o cliente.',
   },
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Clientes, Serviços & Fluxo Operacional',
+    tag: 'Disponível agora',
+    title: 'Cadastro de Clientes e Serviços',
     description:
-      'Cadastro completo de clientes PF/PJ, carteira de serviços com acompanhamento de status, histórico expandido por linha (Master-Detail) e conversão direta de serviços em títulos financeiros.',
+      'Organize todos os seus clientes e serviços prestados em listas limpas. Com 1 clique na linha você vê os detalhes completos e transforma o serviço em cobrança no financeiro.',
   },
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Estrutura Multi-Empresa (Matriz & Filiais)',
+    tag: 'Disponível agora',
+    title: 'Matriz e Filiais no Mesmo Acesso',
     description:
-      'Cada empresa opera com isolamento rigoroso de dados. Administradores da Matriz alternam instantaneamente entre uma filial específica ou a visão consolidada do grupo.',
+      'Se a empresa tiver mais de um CNPJ ou filial, os dados ficam separados por unidade, mas quem administra a Matriz consegue enxergar tudo junto quando quiser.',
   },
   {
-    tag: 'DISPONÍVEL AGORA',
-    title: 'Controle de Acesso, Auditoria & LGPD',
+    tag: 'Disponível agora',
+    title: 'Permissões por Cargo e Privacidade (LGPD)',
     description:
-      'Perfis dedicados (Administrador, Financeiro, Gestor, Observador e Colaborador), troca obrigatória de senha provisória, registro de consentimentos, anonimização LGPD e trilha de auditoria.',
+      'Defina exatamente o que cada funcionário pode fazer (quem lança pagamentos, quem só consulta e quem vê apenas suas próprias tarefas), com registro de segurança e proteção de dados.',
   },
 ]
 
@@ -255,99 +323,132 @@ type RoadmapPhase = {
 const roadmapPhases: RoadmapPhase[] = [
   {
     track: 'finance',
-    trackLabel: 'Módulo Financeiro',
-    phase: 'Fase 1',
-    statusLabel: 'Em produção',
+    trackLabel: 'Financeiro',
+    phase: 'Etapa 1',
+    statusLabel: 'Já funcionando',
     statusTone: 'live',
-    title: 'MVP Financeiro Operacional (Contas, Títulos e Caixa)',
+    title: 'Controle de Contas, Parcelas e Fluxo de Caixa',
     summary:
-      'Base sólida em produção para controlar liquidez diária, contas financeiras e títulos a pagar/receber integrados a clientes e serviços.',
+      'Tudo o que a empresa precisa hoje para saber quanto tem em caixa, quanto vai receber, quanto tem para pagar e quem está em atraso.',
     deliverables: [
-      'Cadastro de contas bancárias, caixas e carteiras de recebimento com saldo atualizado transacionalmente.',
-      'Títulos a pagar/receber com parcelamento por valor total ou parcela e dia fixo mensal de vencimento.',
-      'Baixas totais ou parciais em modelo imutável (append-only) com registro de juros, multa, desconto e estorno.',
-      'Fluxo de caixa realizado e projetado, aging de vencimentos e exportação CSV sanitizada.',
+      'Cadastro de contas bancárias, caixas e carteiras digitais com saldo atualizado automaticamente a cada baixa.',
+      'Lançamentos divididos por valor total ou por parcela, com definição obrigatória do dia fixo de vencimento.',
+      'Registro de pagamentos totais ou parciais com juros, multa, desconto e estorno seguro sem apagar o histórico.',
+      'Visão do que já entrou/saiu, previsão futura de caixa, contas vencidas e download em planilha (CSV).',
     ],
   },
   {
     track: 'finance',
-    trackLabel: 'Módulo Financeiro',
-    phase: 'Fase 2',
-    statusLabel: 'Próxima implantação',
+    trackLabel: 'Financeiro',
+    phase: 'Etapa 2',
+    statusLabel: 'Próxima entrega',
     statusTone: 'next',
-    title: 'Conciliação Bancária (OFX/CSV), Transferências e Governança',
+    title: 'Importação do Extrato Bancário e Aprovação de Pagamentos',
     summary:
-      'Redução de digitação manual com conciliação de extratos bancários e controles de aprovação entre operadores.',
+      'Menos trabalho manual conferindo extrato do banco e mais segurança antes de liberar pagamentos maiores.',
     deliverables: [
-      'Importação de extratos OFX e CSV bancários com sugestão automática de conciliação e prevenção de duplicidade.',
-      'Transferências entre contas próprias e entre Matriz ↔ Filial (intercompany), eliminadas na visão consolidada.',
-      'DRE Gerencial por competência (além da visão de caixa) e marcação automática diária de títulos vencidos.',
-      'Alçadas de aprovação (Maker-Checker) para pagamentos relevantes, exigindo dupla conferência.',
+      'Importação gratuita do extrato do seu banco (arquivos OFX ou CSV) com sugestão automática do que já bate com suas contas.',
+      'Transferência organizada entre contas da mesma empresa ou entre Matriz e Filiais, sem somar faturamento duplicado.',
+      'Relatório mensal mostrando lucro/prejuízo real pelo mês do serviço prestado, não apenas pela data do pagamento.',
+      'Regra de dupla conferência: pagamentos acima de um valor escolhido exigem aprovação de outra pessoa antes de pagar.',
     ],
   },
   {
     track: 'finance',
-    trackLabel: 'Módulo Financeiro',
-    phase: 'Fase 3',
+    trackLabel: 'Financeiro',
+    phase: 'Etapa 3',
     statusLabel: 'Planejado',
     statusTone: 'planned',
-    title: 'Recorrência SaaS, Cobrança via PSP e Integração NFS-e ADN',
+    title: 'Assinaturas Recorrentes, PIX/Boleto Automático e Nota Fiscal Nacional',
     summary:
-      'Automação de contratos recorrentes, indicadores SaaS nativos e cobrança automatizada por parceiros regulados.',
+      'Pensado para empresas que cobram mensalidades ou querem automatizar cobranças e emissão de notas.',
     deliverables: [
-      'Contratos recorrentes (mensais/anuais) com faturamento agendado e projeção automática de recebíveis.',
-      'Painel gerencial de MRR, ARR, Churn, Burn Rate e Runway para empresas de assinatura e serviços recorrentes.',
-      'Emissão de PIX dinâmico e boleto exclusivamente via gateways/PSPs regulados, com baixa confirmada por webhook assinado.',
-      'Integração direta com emissão de NFS-e no Padrão Nacional (ADN) vinculada aos serviços e títulos.',
+      'Contratos mensais ou anuais que geram cobranças e previsões futuras automaticamente todo mês.',
+      'Indicadores prontos para negócios de assinatura: receita mensal recorrente, cancelamentos e fôlego de caixa.',
+      'Geração de PIX e boleto usando parceiros de pagamento regulados, dando baixa automática quando o cliente paga.',
+      'Integração direta para emissão de Nota Fiscal de Serviço no padrão nacional.',
     ],
   },
   {
     track: 'accounting',
-    trackLabel: 'Módulo de Contabilidade',
-    phase: 'Fase 1',
+    trackLabel: 'Contabilidade',
+    phase: 'Etapa 1',
     statusLabel: 'Planejado',
     statusTone: 'planned',
-    title: 'Núcleo em Partidas Dobradas e Livros Auxiliares (NBC TG 1002 / ITG 2000)',
+    title: 'Organização Contábil Automática desde a Origem',
     summary:
-      'Estrutura contábil auxiliar em regime de competência para organizar a empresa desde a origem com total rastreabilidade.',
+      'Estrutura pensada para deixar cada movimentação da empresa organizada no padrão que os escritórios de contabilidade utilizam.',
     deliverables: [
-      'Plano de Contas padrão alinhado à NBC TG 1002 (Microentidades) e extensível à NBC TG 1001 (Pequenas Empresas).',
-      'Lançamentos em partidas dobradas (Débito = Crédito) imutáveis, com histórico padronizado e lastro documental.',
-      'Controle de competências mensais (abertura e fechamento de período contábil).',
-      'Livro Diário auxiliar, Livro Razão analítico e Balancete de Verificação com conferência matemática automática.',
+      'Plano de contas já pronto para pequenas e médias empresas, sem precisar montar do zero.',
+      'Registros contábeis protegidos que não permitem exclusões silenciosas — qualquer correção gera um estorno transparente.',
+      'Fechamento mensal de período para evitar alterações acidentais em meses que já foram conferidos.',
+      'Relatórios de conferência contábil (Diário, Razão e Balancete) sempre batendo os valores automaticamente.',
     ],
   },
   {
     track: 'accounting',
-    trackLabel: 'Módulo de Contabilidade',
-    phase: 'Fase 2',
+    trackLabel: 'Contabilidade',
+    phase: 'Etapa 2',
     statusLabel: 'Planejado',
     statusTone: 'planned',
-    title: 'Ponte Automática Financeiro → Contábil & Pacote do Contador',
+    title: 'Envio Organizado de Tudo para o Seu Contador em 1 Clique',
     summary:
-      'Integração nativa entre o caixa financeiro e a contabilidade de competência, eliminando retrabalho com o escritório contábil.',
+      'Chega de ficar juntando comprovantes e notas no fim do mês: o PFM prepara o pacote completo para a contabilidade.',
     deliverables: [
-      'Motor de regras contábeis gerando lançamentos automáticos a partir de NFs, títulos e baixas liquidadas.',
-      'Perfil dedicado para Contador parceiro (accountant) com acesso seguro para conferência, ajustes e fechamento mensal.',
-      'Emissão de DRE Preliminar e Balanço Patrimonial Preliminar com aviso legal e comparativo Matriz/Filiais.',
-      'Pacote Mensal do Contador em 1 clique: plano de contas, diário, balancete, DRE e PDFs das NFs do mês.',
+      'O que você lança no Financeiro e nas Notas Fiscais já alimenta automaticamente o resumo contábil do mês.',
+      'Acesso exclusivo para o seu Contador entrar e conferir relatórios e documentos sem mexer no caixa da empresa.',
+      'Demonstrativo prévio de lucro (DRE) e patrimônio para o dono da empresa acompanhar o resultado antes do fechamento.',
+      'Botão "Pacote do Contador": baixa um pacote organizado com os relatórios e todos os PDFs das notas do mês.',
     ],
   },
   {
     track: 'accounting',
-    trackLabel: 'Módulo de Contabilidade',
-    phase: 'Fase 3',
+    trackLabel: 'Contabilidade',
+    phase: 'Etapa 3',
     statusLabel: 'Planejado',
     statusTone: 'planned',
-    title: 'Receita Diferida (CPC 47), Monitor do Fator R e Conformidade Estendida',
+    title: 'Acompanhamento de Planos Anuais e Termômetro de Impostos (Fator R)',
     summary:
-      'Recursos estratégicos para empresas de tecnologia/SaaS acompanharem competência real e indicadores tributários.',
+      'Recursos avançados para empresas de serviço e tecnologia tomarem decisões melhores ao longo do ano.',
     deliverables: [
-      'Apropriação mensal automática de Receita Diferida (CPC 47 / IFRS 15) em assinaturas anuais pagas antecipadamente.',
-      'Termômetro estimativo do Fator R do Simples Nacional comparando folha/pró-labore e faturamento dos últimos 12 meses.',
-      'Eliminação automática intercompany na visão consolidada e mapeamento referencial da Receita Federal.',
-      'Cadeia criptográfica de integridade nos lançamentos contábeis para auditoria e retenção legal (5 a 10 anos).',
+      'Para quem vende planos anuais à vista: divide corretamente a receita mês a mês para não distorcer o resultado.',
+      'Termômetro indicativo do Fator R (Simples Nacional) para ajudar você e seu contador a avaliarem economia de imposto.',
+      'Visão consolidada do grupo já eliminando transferências internas entre Matriz e Filiais.',
+      'Rastreio reforçado de integridade para auditorias e guarda segura pelo prazo exigido por lei.',
     ],
+  },
+]
+
+const faqItems = [
+  {
+    question: 'Não sou contador nem trabalho com finanças. Vou conseguir usar o PFM?',
+    answer:
+      'Sim. O sistema foi pensado para o dia a dia do dono da empresa ou da equipe administrativa: você escolhe o cliente, cadastra o valor e as parcelas em linguagem simples, e o sistema cuida dos cálculos e saldos.',
+  },
+  {
+    question: 'O PFM substitui o meu contador ou escritório de contabilidade?',
+    answer:
+      'Não. Por lei no Brasil, balanços oficiais e guias de impostos precisam ser feitos e assinados por um contador habilitado. O PFM organiza toda a rotina financeira e as notas fiscais da empresa para facilitar muito o trabalho entre você e seu contador.',
+  },
+  {
+    question: 'O sistema mexe diretamente no dinheiro da minha conta bancária?',
+    answer:
+      'Não. O PFM não é um banco e não movimenta seu dinheiro. Ele funciona como seu painel de controle e organização: você registra as contas e dá baixa nos recebimentos/pagamentos (e nas próximas etapas poderá importar o extrato bancário para conferir tudo rápido).',
+  },
+  {
+    question: 'Minha empresa é pequena e só tem 1 CNPJ. Vale a pena usar?',
+    answer:
+      'Com certeza. Você pode começar com apenas 1 empresa, 1 conta bancária e poucos clientes. Se no futuro abrir uma filial ou aumentar a equipe, a estrutura já está pronta sem precisar trocar de sistema.',
+  },
+  {
+    question: 'Consigo limitar o que cada funcionário vê dentro da ferramenta?',
+    answer:
+      'Sim. Existem perfis separados: quem é de campo vê apenas os próprios serviços e nunca vê o financeiro da empresa; quem só acompanha pode ter acesso apenas de leitura; e apenas perfis autorizados alteram contas e pagamentos.',
+  },
+  {
+    question: 'Como funciona para liberar o acesso para a minha empresa?',
+    answer:
+      'Você clica em "Solicitar cadastro", preenche os dados da empresa e do responsável, confirma o código enviado no seu e-mail e, assim que aprovado, já pode entrar e começar a usar no mesmo dia.',
   },
 ]
 
@@ -364,6 +465,7 @@ function PlatformPresentation({
   const [selectedUnit, setSelectedUnit] = useState<UnitKey>('consolidated')
   const [expandedNfId, setExpandedNfId] = useState<string | null>('nf-142')
   const [roadmapTrack, setRoadmapTrack] = useState<RoadmapTrack>('all')
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
 
   const filteredFinanceEntries = demoFinanceEntries.filter((item) => {
     if (financeFilter === 'all') return true
@@ -384,15 +486,16 @@ function PlatformPresentation({
           <a className="pres-brand" href="#pres-hero">
             <span className="brand-mark" aria-hidden="true">P</span>
             <span>
-              PFM <strong>Plataforma</strong>
+              PFM <strong>Gestão Empresarial</strong>
             </span>
           </a>
 
           <nav className="pres-nav" aria-label="Navegação da apresentação">
-            <a href="#pres-hero">Visão Geral</a>
-            <a href="#pres-demo">Demonstrativo</a>
-            <a href="#pres-modules">Recursos Ativos</a>
-            <a href="#pres-roadmap">Futuras Implantações</a>
+            <a href="#pres-for-who">Para quem é</a>
+            <a href="#pres-how">Como funciona</a>
+            <a href="#pres-demo">Veja na tela</a>
+            <a href="#pres-roadmap">Futuras novidades</a>
+            <a href="#pres-faq">Dúvidas</a>
           </nav>
 
           <div className="pres-topbar-actions">
@@ -426,12 +529,12 @@ function PlatformPresentation({
       <main className="pres-main">
         <section className="pres-hero" id="pres-hero">
           <div className="pres-hero-copy">
-            <p className="eyebrow">VISÃO EXECUTIVA DA PLATAFORMA</p>
-            <h1>Gestão operacional, fiscal e financeira em um único fluxo confiável.</h1>
+            <p className="eyebrow">SIMPLES DE ENTENDER E PRONTO PARA O DIA A DIA</p>
+            <h1>Organize clientes, notas fiscais e o dinheiro da empresa sem depender de planilhas.</h1>
             <p className="pres-hero-lead">
-              O <strong>PFM</strong> conecta o dia a dia de clientes, serviços e notas fiscais ao
-              controle financeiro de caixa e à evolução planejada para pré-contabilidade gerencial —
-              com arquitetura multi-empresa (Matriz e Filiais), trilha de auditoria e conformidade LGPD.
+              Mesmo que você não seja da área financeira ou contábil, o <strong>PFM</strong> mostra
+              com clareza quanto tem em caixa, quem precisa pagar você, quais contas vencem nos
+              próximos dias e onde estão as notas fiscais da sua empresa.
             </p>
 
             <div className="pres-hero-actions">
@@ -439,65 +542,133 @@ function PlatformPresentation({
                 Solicitar cadastro da empresa
                 <span aria-hidden="true">→</span>
               </button>
-              <a className="pres-btn-secondary is-lg" href="#pres-demo">
-                Explorar demonstrativo interativo
+              <a className="pres-btn-secondary is-lg" href="#pres-how">
+                Entender em 4 passos
               </a>
               <button className="text-button pres-login-link" onClick={onBackToLogin} type="button">
-                Já tenho acesso · Voltar ao login
+                Já tenho conta · Voltar ao login
               </button>
             </div>
 
-            <div className="pres-hero-badges" aria-label="Pilares da plataforma">
-              <span>Financeiro Fase 1 ativo</span>
-              <span>Dashboard BI interativo</span>
-              <span>Leitura local de NF em PDF</span>
-              <span>Multi-empresa (Matriz &amp; Filiais)</span>
+            <div className="pres-hero-badges" aria-label="Benefícios principais">
+              <span>Sem complicação contábil</span>
+              <span>Leitura automática de PDF da nota</span>
+              <span>Parcelamento com dia fixo</span>
+              <span>Funciona para 1 empresa ou várias filiais</span>
             </div>
           </div>
 
-          <aside className="pres-hero-card" aria-label="Resumo executivo da jornada">
+          <aside className="pres-hero-card" aria-label="Resumo rápido do que o PFM entrega">
             <div className="pres-hero-card-head">
-              <span>ARQUITETURA INTEGRADA PFM</span>
-              <span className="pres-status-pill is-live">Operação + Financeiro</span>
+              <span>EM RESUMO, O QUE ELE ENTREGA?</span>
+              <span className="pres-status-pill is-live">Pronto para usar</span>
             </div>
 
             <ol className="pres-flow-list">
               <li>
-                <strong>1. Operação &amp; Clientes</strong>
-                <span>Serviços prestados, contratos e faturamento organizados por unidade.</span>
+                <strong>1. Tudo do cliente em um lugar só</strong>
+                <span>Serviços prestados, status de entrega e histórico de faturamento organizados.</span>
               </li>
               <li>
-                <strong>2. Notas Fiscais (PDF)</strong>
-                <span>Extração automática, guarda segura e disparo de PDF por e-mail.</span>
+                <strong>2. Notas fiscais fáceis de achar e enviar</strong>
+                <span>Você sobe o PDF, o sistema lê os dados e envia por e-mail quando precisar.</span>
               </li>
               <li>
-                <strong>3. Financeiro · Fase 1 (Ativo)</strong>
-                <span>Contas a pagar/receber, parcelamento com dia fixo, baixas imutáveis e fluxo de caixa.</span>
+                <strong>3. Controle claro do que entra e sai (Ativo hoje)</strong>
+                <span>Contas a pagar/receber, parcelas automáticas, saldo real e alertas de atraso.</span>
               </li>
               <li>
-                <strong>4. Contabilidade &amp; Conciliação (Roadmap)</strong>
-                <span>OFX/CSV, partidas dobradas (NBC TG 1002), DRE, CPC 47 e Pacote do Contador.</span>
+                <strong>4. Integração com banco e contador (Próximas fases)</strong>
+                <span>Importação de extrato bancário e pacote mensal pronto para enviar ao contador.</span>
               </li>
             </ol>
           </aside>
         </section>
 
+        <section className="pres-section" id="pres-for-who" aria-labelledby="pres-for-who-title">
+          <div className="pres-section-head">
+            <div>
+              <p className="eyebrow">CLAREZA ANTES DE TUDO</p>
+              <h2 id="pres-for-who-title">Para quem o PFM foi feito e o que muda na rotina</h2>
+              <p>
+                Se você já se pegou procurando uma nota fiscal antiga ou tentando somar no papel
+                quanto vai sobrar no fim do mês, veja como o sistema ajuda na prática.
+              </p>
+            </div>
+          </div>
+
+          <div className="pres-audience-grid">
+            {audienceProfiles.map((profile) => (
+              <article className="pres-audience-card" key={profile.title}>
+                <h3>{profile.title}</h3>
+                <p>{profile.description}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="pres-compare-grid">
+            <article className="pres-compare-card is-before">
+              <span className="pres-compare-tag">Como costuma ser antes</span>
+              <h3>Informações soltas e retrabalho toda semana</h3>
+              <ul className="pres-check-list">
+                {beforeItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="pres-compare-card is-after">
+              <span className="pres-compare-tag is-good">Como fica com o PFM</span>
+              <h3>Rotina conectada do serviço até o saldo em conta</h3>
+              <ul className="pres-check-list">
+                {afterItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section className="pres-section" id="pres-how" aria-labelledby="pres-how-title">
+          <div className="pres-section-head">
+            <div>
+              <p className="eyebrow">NA PRÁTICA, PASSO A PASSO</p>
+              <h2 id="pres-how-title">Como funciona um dia comum usando o PFM</h2>
+              <p>
+                Acompanhe um exemplo real de ponta a ponta — desde fechar um serviço até ver o
+                dinheiro cair na conta da empresa.
+              </p>
+            </div>
+          </div>
+
+          <div className="pres-routine-grid">
+            {practicalRoutineSteps.map((item) => (
+              <article className="pres-routine-card" key={item.step}>
+                <span className="pres-routine-step">{item.step}</span>
+                <h3>{item.title}</h3>
+                <div className="pres-routine-example">{item.example}</div>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="pres-section" id="pres-demo" aria-labelledby="pres-demo-title">
           <div className="pres-section-head">
             <div>
-              <p className="eyebrow">DEMONSTRATIVO INTERATIVO</p>
-              <h2 id="pres-demo-title">Explore como a plataforma funciona na prática</h2>
+              <p className="eyebrow">VEJA COMO É POR DENTRO</p>
+              <h2 id="pres-demo-title">Demonstrativo interativo com exemplos do sistema</h2>
               <p>
-                Navegue pelas visões reais do sistema utilizando um cenário ilustrativo seguro para
-                conhecer a experiência antes de solicitar acesso.
+                Clique nas abas e botões abaixo para testar as principais telas sem precisar criar
+                conta primeiro.
               </p>
             </div>
             <span className="pres-demo-notice" role="note">
-              Dados ilustrativos de demonstração
+              Exemplo ilustrativo para demonstração
             </span>
           </div>
 
-          <div className="pres-tabs" role="tablist" aria-label="Módulos do demonstrativo">
+          <div className="pres-tabs" role="tablist" aria-label="Telas do demonstrativo">
             <button
               aria-selected={activeTab === 'finance'}
               className={activeTab === 'finance' ? 'is-active' : ''}
@@ -505,7 +676,7 @@ function PlatformPresentation({
               role="tab"
               type="button"
             >
-              Financeiro (Fase 1 Ativa)
+              1. Contas e Caixa
             </button>
             <button
               aria-selected={activeTab === 'bi'}
@@ -514,7 +685,7 @@ function PlatformPresentation({
               role="tab"
               type="button"
             >
-              Dashboard BI &amp; Unidades
+              2. Resumo do Negócio
             </button>
             <button
               aria-selected={activeTab === 'nf'}
@@ -523,7 +694,7 @@ function PlatformPresentation({
               role="tab"
               type="button"
             >
-              Notas Fiscais &amp; PDF
+              3. Notas Fiscais (PDF)
             </button>
             <button
               aria-selected={activeTab === 'governance'}
@@ -532,7 +703,7 @@ function PlatformPresentation({
               role="tab"
               type="button"
             >
-              Multi-Empresa &amp; Segurança
+              4. Equipe e Segurança
             </button>
           </div>
 
@@ -541,64 +712,64 @@ function PlatformPresentation({
               <div className="pres-demo-pane">
                 <div className="pres-pane-toolbar">
                   <div>
-                    <h3>Painel Financeiro · Regime de Caixa e Títulos</h3>
+                    <h3>Controle de Contas a Pagar e a Receber</h3>
                     <p>
-                      Filtre títulos abaixo para ver como o PFM acompanha entradas, saídas,
-                      parcelamento com dia fixo e aging de atrasos.
+                      Filtre pelos botões ao lado para enxergar o que já entrou, o que está para
+                      vencer e o que precisa de cobrança.
                     </p>
                   </div>
-                  <div className="pres-chip-group" role="group" aria-label="Filtrar títulos de demonstração">
+                  <div className="pres-chip-group" role="group" aria-label="Filtrar contas de demonstração">
                     <button
                       aria-pressed={financeFilter === 'all'}
                       onClick={() => setFinanceFilter('all')}
                       type="button"
                     >
-                      Todos (5)
+                      Mostrar tudo (5)
                     </button>
                     <button
                       aria-pressed={financeFilter === 'receivable'}
                       onClick={() => setFinanceFilter('receivable')}
                       type="button"
                     >
-                      A Receber
+                      Vou receber
                     </button>
                     <button
                       aria-pressed={financeFilter === 'payable'}
                       onClick={() => setFinanceFilter('payable')}
                       type="button"
                     >
-                      A Pagar
+                      Vou pagar
                     </button>
                     <button
                       aria-pressed={financeFilter === 'overdue'}
                       onClick={() => setFinanceFilter('overdue')}
                       type="button"
                     >
-                      Vencidos
+                      Atrasados
                     </button>
                   </div>
                 </div>
 
                 <div className="pres-kpi-grid">
                   <article className="pres-kpi-card">
-                    <span>Saldo em Contas</span>
+                    <span>Dinheiro em Conta Hoje</span>
                     <strong>{formatMoney(48620)}</strong>
-                    <small>Cora Matriz + Caixa Operacional</small>
+                    <small>Soma das contas cadastradas</small>
                   </article>
                   <article className="pres-kpi-card">
-                    <span>A Receber em Aberto</span>
+                    <span>Falta Receber</span>
                     <strong>{formatMoney(12050)}</strong>
-                    <small>Inclui parcela com dia fixo mensal</small>
+                    <small>Parcelas futuras dos clientes</small>
                   </article>
                   <article className="pres-kpi-card">
-                    <span>A Pagar Previsto</span>
+                    <span>Falta Pagar</span>
                     <strong>{formatMoney(2080)}</strong>
-                    <small>Saldo restante após baixa parcial</small>
+                    <small>Já descontando o que foi pago</small>
                   </article>
                   <article className="pres-kpi-card is-alert">
-                    <span>Aging em Atraso</span>
+                    <span>Em Atraso</span>
                     <strong>{formatMoney(7200)}</strong>
-                    <small>1 título na faixa 1–15 dias</small>
+                    <small>1 parcela vencida para cobrar</small>
                   </article>
                 </div>
 
@@ -606,9 +777,9 @@ function PlatformPresentation({
                   <table className="pres-table">
                     <thead>
                       <tr>
-                        <th scope="col">Tipo</th>
-                        <th scope="col">Título &amp; Contraparte</th>
-                        <th scope="col">Centro de Custo</th>
+                        <th scope="col">Movimento</th>
+                        <th scope="col">Descrição &amp; Cliente / Fornecedor</th>
+                        <th scope="col">Área</th>
                         <th scope="col">Vencimento / Parcela</th>
                         <th scope="col">Valor</th>
                         <th scope="col">Situação</th>
@@ -619,7 +790,7 @@ function PlatformPresentation({
                         <tr key={entry.id}>
                           <td>
                             <span className={`pres-badge ${entry.type === 'receivable' ? 'is-ok' : 'is-warn'}`}>
-                              {entry.type === 'receivable' ? 'A Receber' : 'A Pagar'}
+                              {entry.type === 'receivable' ? 'Entrada' : 'Saída'}
                             </span>
                           </td>
                           <td>
@@ -648,11 +819,11 @@ function PlatformPresentation({
                               }`}
                             >
                               {entry.status === 'paid'
-                                ? 'Liquidado'
+                                ? 'Pago'
                                 : entry.status === 'overdue'
-                                  ? 'Vencido'
+                                  ? 'Atrasado'
                                   : entry.status === 'partial'
-                                    ? 'Parcial'
+                                    ? 'Pago em parte'
                                     : 'Em aberto'}
                             </span>
                           </td>
@@ -668,10 +839,10 @@ function PlatformPresentation({
               <div className="pres-demo-pane">
                 <div className="pres-pane-toolbar">
                   <div>
-                    <h3>Dashboard BI · Visão Isolada por Filial ou Consolidada</h3>
+                    <h3>Resumo para o Dono Acompanhar Resultados</h3>
                     <p>
-                      Alterne a unidade abaixo para simular como gestores acompanham faturamento,
-                      ticket médio e concentração de receita por cliente.
+                      Se tiver mais de uma unidade, clique nos botões para ver tudo somado ou
+                      acompanhar cada filial separadamente.
                     </p>
                   </div>
                   <div className="pres-chip-group" role="group" aria-label="Selecionar unidade de demonstração">
@@ -680,7 +851,7 @@ function PlatformPresentation({
                       onClick={() => setSelectedUnit('consolidated')}
                       type="button"
                     >
-                      Consolidado (Todas)
+                      Todas as Unidades
                     </button>
                     <button
                       aria-pressed={selectedUnit === 'matriz'}
@@ -706,29 +877,29 @@ function PlatformPresentation({
 
                 <div className="pres-kpi-grid">
                   <article className="pres-kpi-card">
-                    <span>Volume de Serviços</span>
+                    <span>Total em Serviços</span>
                     <strong>{formatMoney(currentBiData.receivableTotal)}</strong>
-                    <small>Carteira filtrada na visão ativa</small>
+                    <small>Soma dos trabalhos ativos</small>
                   </article>
                   <article className="pres-kpi-card">
-                    <span>Ticket Médio</span>
+                    <span>Valor Médio por Serviço</span>
                     <strong>{formatMoney(currentBiData.averageTicket)}</strong>
-                    <small>Calculado sobre serviços ativos</small>
+                    <small>Média dos contratos cadastrados</small>
                   </article>
                   <article className="pres-kpi-card">
-                    <span>Serviços Finalizados</span>
+                    <span>Serviços Concluídos</span>
                     <strong>{currentBiData.completedCount}</strong>
-                    <small>Prontos para faturamento / NF</small>
+                    <small>Entregues ao cliente</small>
                   </article>
                   <article className="pres-kpi-card">
-                    <span>Em Andamento / Fila</span>
+                    <span>Em Andamento</span>
                     <strong>{currentBiData.pendingCount}</strong>
-                    <small>Acompanhamento operacional</small>
+                    <small>Sendo executados pela equipe</small>
                   </article>
                 </div>
 
                 <div className="pres-bars-card">
-                  <h4>Principais contratos e serviços da visão selecionada</h4>
+                  <h4>Serviços com maior peso no faturamento desta visão</h4>
                   <div className="pres-bars-list">
                     {currentBiData.bars.map((bar) => (
                       <div className="pres-bar-row" key={bar.name}>
@@ -751,29 +922,29 @@ function PlatformPresentation({
               <div className="pres-demo-pane">
                 <div className="pres-pane-toolbar">
                   <div>
-                    <h3>Notas Fiscais · Leitura Local de PDF e Rastreio Completo</h3>
+                    <h3>Notas Fiscais Organizadas (Sem Digitação Repetida)</h3>
                     <p>
-                      Clique em uma linha da tabela para simular a abertura dos detalhes fiscais,
-                      vínculo financeiro e opções de anexo/envio por e-mail.
+                      Clique em qualquer linha da tabela abaixo para abrir ou fechar os detalhes da
+                      nota e o vínculo com o pagamento.
                     </p>
                   </div>
                 </div>
 
                 <div className="pres-steps-row">
                   <div className="pres-step-box">
-                    <span>Passo 1</span>
-                    <strong>Upload + Leitura Local</strong>
-                    <p>O navegador extrai número da NF, chave de 44 dígitos, data e valor do PDF.</p>
+                    <span>1. Subiu o PDF</span>
+                    <strong>Preenchimento automático</strong>
+                    <p>O sistema lê número, data, valor e chave direto do arquivo PDF da nota.</p>
                   </div>
                   <div className="pres-step-box">
-                    <span>Passo 2</span>
-                    <strong>Conferência no Servidor</strong>
-                    <p>O backend valida integridade do PDF e vincula ao cliente, serviço e título.</p>
+                    <span>2. Tudo conectado</span>
+                    <strong>Ligada ao cliente e ao caixa</strong>
+                    <p>A nota já fica associada ao serviço prestado e à cobrança no financeiro.</p>
                   </div>
                   <div className="pres-step-box">
-                    <span>Passo 3</span>
-                    <strong>Visualização &amp; E-mail</strong>
-                    <p>Pré-visualização protegida no painel e envio direto com anexo ao cliente.</p>
+                    <span>3. Fácil de achar</span>
+                    <strong>Ver na tela ou enviar</strong>
+                    <p>Precisa mandar para o cliente ou contador? Visualize, baixe ou envie por e-mail.</p>
                   </div>
                 </div>
 
@@ -783,7 +954,7 @@ function PlatformPresentation({
                       <tr>
                         <th scope="col">Nota</th>
                         <th scope="col">Cliente</th>
-                        <th scope="col">Emissão</th>
+                        <th scope="col">Data</th>
                         <th scope="col">Valor</th>
                         <th scope="col">Situação</th>
                       </tr>
@@ -818,23 +989,23 @@ function PlatformPresentation({
                               </td>
                             </tr>
                             {isOpen && (
-                              <tr className="pres-nf-detail-row" key={`${nf.id}-detail`}>
+                              <tr className="pres-nf-detail-row">
                                 <td colSpan={5}>
                                   <div className="pres-nf-detail-box">
                                     <div>
-                                      <span>Serviço Vinculado</span>
+                                      <span>Serviço ligado à nota</span>
                                       <strong>{nf.serviceName}</strong>
                                     </div>
                                     <div>
-                                      <span>Reflexo no Financeiro</span>
+                                      <span>Como está no Financeiro</span>
                                       <strong>{nf.linkedEntry}</strong>
                                     </div>
                                     <div>
-                                      <span>PDF Armazenado</span>
-                                      <strong>{nf.fileName} (Ver · Baixar · Enviar por e-mail)</strong>
+                                      <span>Arquivo salvo</span>
+                                      <strong>{nf.fileName} (Abrir · Baixar · Enviar por e-mail)</strong>
                                     </div>
                                     <div className="pres-nf-key">
-                                      <span>Chave de Acesso</span>
+                                      <span>Código / Chave da Nota</span>
                                       <code>{nf.accessKey}</code>
                                     </div>
                                   </div>
@@ -854,38 +1025,36 @@ function PlatformPresentation({
               <div className="pres-demo-pane">
                 <div className="pres-pane-toolbar">
                   <div>
-                    <h3>Governança Multi-Tenant, Perfis de Acesso e LGPD</h3>
+                    <h3>Cada Pessoa Vê Apenas o Que Faz Sentido para o Cargo</h3>
                     <p>
-                      Segregação estrita entre empresas e papéis de usuário para que cada área
-                      acesse apenas o que precisa para operar com segurança.
+                      Segurança para trabalhar com tranquilidade: a equipe operacional não vê o
+                      saldo da empresa, e tudo fica registrado com histórico.
                     </p>
                   </div>
                 </div>
 
                 <div className="pres-gov-grid">
                   <div className="pres-gov-card">
-                    <h4>Matriz &amp; Filiais em Camadas</h4>
+                    <h4>Separação entre Unidades</h4>
                     <p>
-                      Cadastre a empresa Matriz e habilite filiais sob a mesma governança. O acesso é
-                      validado no servidor em todas as consultas e exportações.
+                      Quem trabalha em uma filial acessa apenas os dados daquela filial. Só quem
+                      administra a Matriz consegue alternar entre unidades ou ver o todo.
                     </p>
                     <ul className="pres-check-list">
-                      <li>Visão individual por CNPJ (Matriz ou Filial específica).</li>
-                      <li>Visão consolidada autorizada apenas para gestores da Matriz.</li>
-                      <li>Trilha de auditoria registrando ações sensíveis, exportações e alterações.</li>
+                      <li>Dados de clientes e financeiro nunca se misturam entre empresas.</li>
+                      <li>Histórico registra quem criou, alterou ou baixou cada valor.</li>
                     </ul>
                   </div>
 
                   <div className="pres-gov-card">
-                    <h4>Conformidade LGPD Nativa</h4>
+                    <h4>Privacidade e Proteção de Dados (LGPD)</h4>
                     <p>
-                      Fluxo preparado para transparência com titulares e preservação de obrigações
-                      legais e fiscais.
+                      Seus clientes e colaboradores contam com regras claras de privacidade e guarda
+                      segura das informações.
                     </p>
                     <ul className="pres-check-list">
-                      <li>Aceite versionado de Termos de Uso &amp; Política de Privacidade.</li>
-                      <li>Portal de Privacidade para consulta, portabilidade e anonimização.</li>
-                      <li>Guarda fiscal de títulos e notas preservada conforme prazo legal (5 anos).</li>
+                      <li>Registro oficial de termos de uso e política de privacidade.</li>
+                      <li>Notas e registros financeiros preservados pelo prazo legal de 5 anos.</li>
                     </ul>
                   </div>
                 </div>
@@ -894,47 +1063,47 @@ function PlatformPresentation({
                   <table className="pres-table">
                     <thead>
                       <tr>
-                        <th scope="col">Perfil</th>
-                        <th scope="col">Dashboard BI &amp; Gestão</th>
+                        <th scope="col">Tipo de Usuário</th>
+                        <th scope="col">Clientes e Serviços</th>
                         <th scope="col">Financeiro</th>
                         <th scope="col">Notas Fiscais</th>
-                        <th scope="col">Administração</th>
+                        <th scope="col">Equipe e Filiais</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td><strong>Company Admin</strong></td>
-                        <td>Completo + Matriz/Filiais</td>
-                        <td>Contas, Títulos, Baixas &amp; CSV</td>
-                        <td>Upload, Consulta &amp; Envio</td>
-                        <td>Equipe &amp; Filiais</td>
+                        <td><strong>Dono / Administrador</strong></td>
+                        <td>Acesso completo</td>
+                        <td>Cadastra, baixa e exporta</td>
+                        <td>Sobe PDF, consulta e envia</td>
+                        <td>Gerencia tudo</td>
                       </tr>
                       <tr>
-                        <td><strong>Finance</strong></td>
-                        <td>Consulta de Serviços</td>
-                        <td>Contas, Títulos, Baixas &amp; CSV</td>
-                        <td>Upload, Consulta &amp; Envio</td>
+                        <td><strong>Financeiro</strong></td>
+                        <td>Consulta serviços</td>
+                        <td>Cadastra, baixa e exporta</td>
+                        <td>Sobe PDF, consulta e envia</td>
                         <td>—</td>
                       </tr>
                       <tr>
-                        <td><strong>Manager</strong></td>
-                        <td>Clientes &amp; Serviços</td>
-                        <td>Leitura de Relatórios</td>
-                        <td>Consulta &amp; PDF</td>
+                        <td><strong>Gestor</strong></td>
+                        <td>Gerencia clientes e serviços</td>
+                        <td>Apenas visualiza relatórios</td>
+                        <td>Consulta e abre PDFs</td>
                         <td>—</td>
                       </tr>
                       <tr>
-                        <td><strong>Observer</strong></td>
-                        <td>Somente leitura</td>
-                        <td>Somente leitura</td>
-                        <td>Somente leitura</td>
+                        <td><strong>Somente Consulta</strong></td>
+                        <td>Apenas visualização</td>
+                        <td>Apenas visualização</td>
+                        <td>Apenas visualização</td>
                         <td>—</td>
                       </tr>
                       <tr>
-                        <td><strong>Colaborator</strong></td>
-                        <td>Apenas serviços atribuídos</td>
-                        <td>Bloqueado por segurança</td>
-                        <td>Bloqueado por segurança</td>
+                        <td><strong>Equipe de Campo</strong></td>
+                        <td>Vê apenas seus próprios serviços</td>
+                        <td>Sem acesso</td>
+                        <td>Sem acesso</td>
                         <td>—</td>
                       </tr>
                     </tbody>
@@ -948,11 +1117,11 @@ function PlatformPresentation({
         <section className="pres-section" id="pres-modules" aria-labelledby="pres-modules-title">
           <div className="pres-section-head">
             <div>
-              <p className="eyebrow">O QUE JÁ ESTÁ EM PRODUÇÃO</p>
-              <h2 id="pres-modules-title">Módulos ativos hoje no PFM</h2>
+              <p className="eyebrow">O QUE VOCÊ JÁ RECEBE HOJE</p>
+              <h2 id="pres-modules-title">Recursos já disponíveis desde o primeiro acesso</h2>
               <p>
-                Capacidades já homologadas e disponíveis imediatamente após a aprovação do cadastro
-                da sua empresa.
+                Tudo o que está abaixo já funciona em produção e fica liberado logo após a
+                aprovação do cadastro da sua empresa.
               </p>
             </div>
           </div>
@@ -971,36 +1140,35 @@ function PlatformPresentation({
         <section className="pres-section" id="pres-roadmap" aria-labelledby="pres-roadmap-title">
           <div className="pres-section-head">
             <div>
-              <p className="eyebrow">EVOLUÇÃO ESTRUTURADA</p>
-              <h2 id="pres-roadmap-title">Roadmap: Financeiro e Contabilidade</h2>
+              <p className="eyebrow">PRÓXIMOS PASSOS DA PLATAFORMA</p>
+              <h2 id="pres-roadmap-title">Evolução planejada: Financeiro e Contabilidade</h2>
               <p>
-                Evolução planejada em fases para unir o controle diário do caixa (Financeiro) à
-                escrituração em regime de competência (Contabilidade), respeitando limites técnicos
-                e regulatórios.
+                Veja o que já está no ar hoje e o que vamos entregar nas próximas etapas para unir
+                o controle financeiro à organização contábil da sua empresa.
               </p>
             </div>
 
-            <div className="pres-chip-group" role="group" aria-label="Filtrar trilha do roadmap">
+            <div className="pres-chip-group" role="group" aria-label="Filtrar próximas etapas">
               <button
                 aria-pressed={roadmapTrack === 'all'}
                 onClick={() => setRoadmapTrack('all')}
                 type="button"
               >
-                Visão Completa
+                Ver tudo
               </button>
               <button
                 aria-pressed={roadmapTrack === 'finance'}
                 onClick={() => setRoadmapTrack('finance')}
                 type="button"
               >
-                Financeiro (Fases 1–3)
+                Financeiro (Etapas 1–3)
               </button>
               <button
                 aria-pressed={roadmapTrack === 'accounting'}
                 onClick={() => setRoadmapTrack('accounting')}
                 type="button"
               >
-                Contabilidade (Fases 1–3)
+                Contabilidade (Etapas 1–3)
               </button>
             </div>
           </div>
@@ -1031,21 +1199,55 @@ function PlatformPresentation({
           </div>
 
           <div className="pres-disclaimer" role="note">
-            <strong>Compromisso de transparência operacional e legal:</strong> o PFM não atua como
-            banco ou instituição de pagamento (eventuais cobranças online na Fase 3 serão operadas
-            via parceiros/PSPs regulados) e o futuro Módulo de Contabilidade atua como apoio
-            gerencial e pré-contabilidade integrada — sem substituir a escrituração oficial e a
-            assinatura de profissional habilitado no CRC.
+            <strong>Transparência importante:</strong> o PFM não funciona como banco (seu dinheiro
+            continua sempre no seu banco de confiança) e o futuro Módulo de Contabilidade atua para
+            organizar e facilitar o fechamento do mês — funcionando em parceria com o seu contador,
+            sem substituí-lo.
+          </div>
+        </section>
+
+        <section className="pres-section" id="pres-faq" aria-labelledby="pres-faq-title">
+          <div className="pres-section-head">
+            <div>
+              <p className="eyebrow">PERGUNTAS COMUNS</p>
+              <h2 id="pres-faq-title">Dúvidas de quem está conhecendo o sistema</h2>
+              <p>
+                Respostas diretas para você saber rapidamente se o PFM faz sentido para o momento da
+                sua empresa.
+              </p>
+            </div>
+          </div>
+
+          <div className="pres-faq-list">
+            {faqItems.map((faq, index) => {
+              const isOpen = openFaqIndex === index
+              return (
+                <article className={`pres-faq-item ${isOpen ? 'is-open' : ''}`} key={faq.question}>
+                  <button
+                    aria-expanded={isOpen}
+                    className="pres-faq-trigger"
+                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                    type="button"
+                  >
+                    <span>{faq.question}</span>
+                    <span className="pres-faq-icon" aria-hidden="true">
+                      {isOpen ? '−' : '+'}
+                    </span>
+                  </button>
+                  {isOpen && <p className="pres-faq-answer">{faq.answer}</p>}
+                </article>
+              )
+            })}
           </div>
         </section>
 
         <section className="pres-cta-band" aria-label="Solicitar acesso à plataforma">
           <div>
-            <p className="eyebrow">PRONTO PARA CONHECER DE PERTO?</p>
-            <h2>Leve organização financeira e previsibilidade para sua operação.</h2>
+            <p className="eyebrow">QUER TESTAR NA SUA EMPRESA?</p>
+            <h2>Comece a organizar seus clientes, notas e financeiro em um único lugar.</h2>
             <p>
-              Solicite o cadastro da sua empresa em poucos minutos com validação por e-mail ou
-              entre com sua conta existente para começar a operar.
+              Faça a solicitação em poucos minutos com confirmação por e-mail ou volte para o login
+              se sua empresa já tiver acesso.
             </p>
           </div>
           <div className="pres-cta-actions">
